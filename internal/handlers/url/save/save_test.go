@@ -27,7 +27,7 @@ func TestNew(t *testing.T) {
 		name    string
 		want    want
 		request request
-		urls    map[string]models.Url
+		urls    map[string]models.URL
 	}{
 		{
 			name: "simple test #1",
@@ -39,7 +39,7 @@ func TestNew(t *testing.T) {
 			request: request{
 				url: "https://practicum.yandex.ru/",
 			},
-			urls: map[string]models.Url{},
+			urls: map[string]models.URL{},
 		},
 		{
 			name: "Empty URL",
@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 			request: request{
 				url: "",
 			},
-			urls: map[string]models.Url{},
+			urls: map[string]models.URL{},
 		},
 		{
 			name: "Invalid URL",
@@ -63,7 +63,7 @@ func TestNew(t *testing.T) {
 			request: request{
 				url: "et4bnnny4h",
 			},
-			urls: map[string]models.Url{},
+			urls: map[string]models.URL{},
 		},
 	}
 
@@ -92,9 +92,9 @@ func TestNew(t *testing.T) {
 			resBody, err := io.ReadAll(result.Body)
 
 			if tt.want.statusCode == http.StatusCreated {
-				mUrl, err := storage.GetUrlById(ctx, string(resBody))
+				mURL, err := storage.GetUrlById(ctx, string(resBody))
 				assert.NoError(t, err)
-				assert.Equal(t, tt.request.url, mUrl.Url)
+				assert.Equal(t, tt.request.url, mURL.URL)
 			}
 		})
 	}

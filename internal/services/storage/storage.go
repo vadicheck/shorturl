@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	ErrUrlOrCodeExists = errors.New("url or code exists")
+	ErrURLOrCodeExists = errors.New("url or code exists")
 )
 
-type UrlStorage interface {
+type URLStorage interface {
 	SaveUrl(ctx context.Context, code string, url string) (int64, error)
-	GetUrlById(ctx context.Context, code string) (models.Url, error)
-	GetUrlByUrl(ctx context.Context, url string) (models.Url, error)
+	GetUrlById(ctx context.Context, code string) (models.URL, error)
+	GetUrlByUrl(ctx context.Context, url string) (models.URL, error)
 }

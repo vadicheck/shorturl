@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/services/storage"
 )
@@ -37,7 +36,7 @@ func (s *Storage) SaveUrl(ctx context.Context, code string, url string) (int64, 
 		var sqliteErr sqlite3.Error
 
 		if errors.As(err, &sqliteErr) && errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
-			return 0, fmt.Errorf("%s: %w", op, storage.ErrUrlOrCodeExists)
+			return 0, fmt.Errorf("%s: %w", op, storage.ErrURLOrCodeExists)
 		}
 
 		return 0, fmt.Errorf("%s: %w", op, err)
@@ -51,27 +50,27 @@ func (s *Storage) SaveUrl(ctx context.Context, code string, url string) (int64, 
 	return id, nil
 }
 
-func (s *Storage) GetUrlById(ctx context.Context, code string) (models.Url, error) {
+func (s *Storage) GetUrlById(ctx context.Context, code string) (models.URL, error) {
 	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE code=?", code)
 
 	return s.scan(row, "storage.sqlite.GetUrlById")
 }
 
-func (s *Storage) GetUrlByUrl(ctx context.Context, url string) (models.Url, error) {
+func (s *Storage) GetUrlByUrl(ctx context.Context, url string) (models.URL, error) {
 	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE url=?", url)
 
 	return s.scan(row, "storage.sqlite.GetUrlByUrl")
 }
 
-func (s *Storage) scan(row *sql.Row, op string) (models.Url, error) {
-	var modelUrl models.Url
-	err := row.Scan(&modelUrl.ID, &modelUrl.Code, &modelUrl.Url)
+func (s *Storage) scan(row *sql.Row, op string) (models.URL, error) {
+	var modelUrl models.URL
+	err := row.Scan(&modelUrl.ID, &modelUrl.Code, &modelUrl.URL)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.Url{}, nil
+			return models.URL{}, nil
 		}
 
-		return models.Url{}, fmt.Errorf("%s: %v", op, err)
+		return models.URL{}, fmt.Errorf("%s: %v", op, err)
 	}
 
 	return modelUrl, nil

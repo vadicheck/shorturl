@@ -12,10 +12,10 @@ import (
 )
 
 type Storage struct {
-	urls map[string]models.Url
+	urls map[string]models.URL
 }
 
-func NewStorage(urls map[string]models.Url) (*Storage, error) {
+func NewStorage(urls map[string]models.URL) (*Storage, error) {
 	return &Storage{urls}, nil
 }
 
@@ -23,17 +23,17 @@ func (s *Storage) SaveUrl(ctx context.Context, code string, url string) (int64, 
 	return 0, nil
 }
 
-func (s *Storage) GetUrlById(ctx context.Context, code string) (models.Url, error) {
+func (s *Storage) GetUrlById(ctx context.Context, code string) (models.URL, error) {
 	url, ok := s.urls[code]
 	if !ok {
-		return models.Url{}, nil
+		return models.URL{}, nil
 	}
 
 	return url, nil
 }
 
-func (s *Storage) GetUrlByUrl(ctx context.Context, url string) (models.Url, error) {
-	return models.Url{}, nil
+func (s *Storage) GetUrlByUrl(ctx context.Context, url string) (models.URL, error) {
+	return models.URL{}, nil
 }
 
 func TestNew(t *testing.T) {
@@ -46,7 +46,7 @@ func TestNew(t *testing.T) {
 		name    string
 		request string
 		want    want
-		urls    map[string]models.Url
+		urls    map[string]models.URL
 	}{
 		{
 			name:    "simple test #1",
@@ -56,11 +56,11 @@ func TestNew(t *testing.T) {
 				statusCode:  http.StatusTemporaryRedirect,
 				response:    "https://practicum.yandex.ru/",
 			},
-			urls: map[string]models.Url{
+			urls: map[string]models.URL{
 				"code": {
 					ID:   1,
 					Code: "code",
-					Url:  "https://practicum.yandex.ru/",
+					URL:  "https://practicum.yandex.ru/",
 				},
 			},
 		},
@@ -72,11 +72,11 @@ func TestNew(t *testing.T) {
 				statusCode:  http.StatusBadRequest,
 				response:    "",
 			},
-			urls: map[string]models.Url{
+			urls: map[string]models.URL{
 				"code": {
 					ID:   1,
 					Code: "code",
-					Url:  "https://practicum.yandex.ru/",
+					URL:  "https://practicum.yandex.ru/",
 				},
 			},
 		},
@@ -88,11 +88,11 @@ func TestNew(t *testing.T) {
 				statusCode:  http.StatusNotFound,
 				response:    "",
 			},
-			urls: map[string]models.Url{
+			urls: map[string]models.URL{
 				"code": {
 					ID:   1,
 					Code: "code",
-					Url:  "https://practicum.yandex.ru/",
+					URL:  "https://practicum.yandex.ru/",
 				},
 			},
 		},

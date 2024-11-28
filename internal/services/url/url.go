@@ -7,16 +7,16 @@ import (
 )
 
 type Service struct {
-	Storage storage.UrlStorage
+	Storage storage.URLStorage
 }
 
-func (s *Service) Create(ctx context.Context, sourceUrl string) (string, error) {
-	mUrl, err := s.Storage.GetUrlByUrl(ctx, sourceUrl)
+func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) {
+	mURL, err := s.Storage.GetUrlByUrl(ctx, sourceURL)
 	if err != nil {
 		return "", err
 	}
-	if mUrl.ID > 0 {
-		return mUrl.Code, nil
+	if mURL.ID > 0 {
+		return mURL.Code, nil
 	}
 
 	var code string
@@ -25,16 +25,16 @@ func (s *Service) Create(ctx context.Context, sourceUrl string) (string, error) 
 	for !isUnique {
 		code = random.GenerateRandomString(10)
 
-		mUrl, err = s.Storage.GetUrlById(ctx, code)
+		mURL, err = s.Storage.GetUrlById(ctx, code)
 		if err != nil {
 			return "", err
 		}
-		if mUrl.ID == 0 {
+		if mURL.ID == 0 {
 			isUnique = true
 		}
 	}
 
-	_, err = s.Storage.SaveUrl(ctx, code, sourceUrl)
+	_, err = s.Storage.SaveUrl(ctx, code, sourceURL)
 
 	if err != nil {
 		return "", err

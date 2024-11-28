@@ -1,7 +1,7 @@
 package models
 
-type Url struct {
+type URL struct {
 	ID   int64
 	Code string
-	Url  string
+	URL  string
 }
