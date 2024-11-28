@@ -5,7 +5,8 @@ import (
 	"flag"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
-	"github.com/vadicheck/shorturl/internal/services/storage/sqlite"
+	"github.com/vadicheck/shorturl/internal/models"
+	"github.com/vadicheck/shorturl/internal/services/storage/memory"
 	"github.com/vadicheck/shorturl/internal/services/url"
 	"log"
 	"net/http"
@@ -22,7 +23,12 @@ func main() {
 		return
 	}
 
-	storage, err := sqlite.New(storagePath)
+	//storage, err := sqlite.New(storagePath)
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	storage, err := memory.New(map[string]models.URL{})
 	if err != nil {
 		panic(err)
 	}
