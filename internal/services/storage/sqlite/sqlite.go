@@ -63,8 +63,8 @@ func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, erro
 }
 
 func (s *Storage) scan(row *sql.Row, op string) (models.URL, error) {
-	var modelUrl models.URL
-	err := row.Scan(&modelUrl.ID, &modelUrl.Code, &modelUrl.URL)
+	var modelURL models.URL
+	err := row.Scan(&modelURL.ID, &modelURL.Code, &modelURL.URL)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.URL{}, nil
@@ -73,5 +73,5 @@ func (s *Storage) scan(row *sql.Row, op string) (models.URL, error) {
 		return models.URL{}, fmt.Errorf("%s: %v", op, err)
 	}
 
-	return modelUrl, nil
+	return modelURL, nil
 }
