@@ -5,11 +5,23 @@ import (
 	"github.com/vadicheck/shorturl/internal/services/storage"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func New(ctx context.Context, storage storage.UrlStorage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		id := req.PathValue("id")
+
+		// Костыль, пока не решен вопрос с получением id из path в тестах
+		if id == "" {
+			id = strings.Trim(req.URL.String(), "/")
+		}
+
+		if id == "" {
+			log.Printf("id is empty")
+			http.Error(res, "id is empty", http.StatusBadRequest)
+			return
+		}
 
 		log.Printf("id requested: %s", id)
 
