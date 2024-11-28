@@ -90,9 +90,10 @@ func TestNew(t *testing.T) {
 
 			defer result.Body.Close()
 			resBody, err := io.ReadAll(result.Body)
+			require.NoError(t, err)
 
 			if tt.want.statusCode == http.StatusCreated {
-				mURL, err := storage.GetUrlById(ctx, string(resBody))
+				mURL, err := storage.GetURLByID(ctx, string(resBody))
 				assert.NoError(t, err)
 				assert.Equal(t, tt.request.url, mURL.URL)
 			}

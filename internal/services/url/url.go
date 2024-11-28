@@ -11,7 +11,7 @@ type Service struct {
 }
 
 func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) {
-	mURL, err := s.Storage.GetUrlByUrl(ctx, sourceURL)
+	mURL, err := s.Storage.GetURLByURL(ctx, sourceURL)
 	if err != nil {
 		return "", err
 	}
@@ -25,7 +25,7 @@ func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) 
 	for !isUnique {
 		code = random.GenerateRandomString(10)
 
-		mURL, err = s.Storage.GetUrlById(ctx, code)
+		mURL, err = s.Storage.GetURLByID(ctx, code)
 		if err != nil {
 			return "", err
 		}
@@ -34,7 +34,7 @@ func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) 
 		}
 	}
 
-	_, err = s.Storage.SaveUrl(ctx, code, sourceURL)
+	_, err = s.Storage.SaveURL(ctx, code, sourceURL)
 
 	if err != nil {
 		return "", err

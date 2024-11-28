@@ -25,7 +25,7 @@ func New(ctx context.Context, storage storage.URLStorage) http.HandlerFunc {
 
 		log.Printf("id requested: %s", id)
 
-		mURL, err := storage.GetUrlById(ctx, id)
+		mURL, err := storage.GetURLByID(ctx, id)
 		if err != nil {
 			log.Printf("Failed to get url by id. id: %s, err: %s", id, err)
 			http.Error(res, "Failed to get url", http.StatusInternalServerError)

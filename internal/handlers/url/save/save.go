@@ -27,16 +27,16 @@ func New(ctx context.Context, service surl.Service) http.HandlerFunc {
 
 		log.Printf("Received request body: %s", body)
 
-		reqUrl := string(body)
+		reqURL := string(body)
 
-		_, err = url.IsValid(reqUrl)
+		_, err = url.IsValid(reqURL)
 		if err != nil {
 			log.Println("URL is invalid: ", err)
 			http.Error(res, "URL is invalid", http.StatusBadRequest)
 			return
 		}
 
-		code, err := service.Create(ctx, reqUrl)
+		code, err := service.Create(ctx, reqURL)
 		if err != nil {
 			log.Println("Error saving the record: ", err)
 			http.Error(res, "Failed to save the record", http.StatusInternalServerError)

@@ -23,8 +23,8 @@ func New(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
-func (s *Storage) SaveUrl(ctx context.Context, code string, url string) (int64, error) {
-	const op = "storage.sqlite.SaveUrl"
+func (s *Storage) SaveURL(ctx context.Context, code string, url string) (int64, error) {
+	const op = "storage.sqlite.SaveURL"
 
 	stmt, err := s.db.Prepare("INSERT INTO main.urls (code, url) VALUES (?,?)")
 	if err != nil {
@@ -50,16 +50,16 @@ func (s *Storage) SaveUrl(ctx context.Context, code string, url string) (int64, 
 	return id, nil
 }
 
-func (s *Storage) GetUrlById(ctx context.Context, code string) (models.URL, error) {
+func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {
 	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE code=?", code)
 
-	return s.scan(row, "storage.sqlite.GetUrlById")
+	return s.scan(row, "storage.sqlite.GetURLByID")
 }
 
-func (s *Storage) GetUrlByUrl(ctx context.Context, url string) (models.URL, error) {
+func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, error) {
 	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE url=?", url)
 
-	return s.scan(row, "storage.sqlite.GetUrlByUrl")
+	return s.scan(row, "storage.sqlite.GetURLByURL")
 }
 
 func (s *Storage) scan(row *sql.Row, op string) (models.URL, error) {
