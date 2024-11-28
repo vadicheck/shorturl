@@ -39,7 +39,7 @@ func main() {
 
 	log.Println("Server started")
 
-	err = http.ListenAndServe(":8081", mux)
+	err = http.ListenAndServe(":8080", mux)
 	if err != nil {
 		panic(err)
 	}
