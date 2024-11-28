@@ -93,7 +93,9 @@ func TestNew(t *testing.T) {
 			require.NoError(t, err)
 
 			if tt.want.statusCode == http.StatusCreated {
-				mURL, err := storage.GetURLByID(ctx, string(resBody))
+				id := strings.TrimPrefix(string(resBody), "http://localhost:8080/")
+
+				mURL, err := storage.GetURLByID(ctx, id)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.request.url, mURL.URL)
 			}
