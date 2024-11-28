@@ -23,3 +23,5 @@ vendor/
 .vscode
 
 devopsmastertest-darwin-arm64
+golangci-lint
+.golangci.yml
