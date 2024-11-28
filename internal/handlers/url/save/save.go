@@ -11,11 +11,11 @@ import (
 
 func New(ctx context.Context, service surl.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		if req.Header.Get("Content-Type") != "text/plain; charset=utf-8" {
-			log.Println("Unsupported Content-Type")
-			http.Error(res, "Unsupported Content-Type", http.StatusUnsupportedMediaType)
-			return
-		}
+		//if req.Header.Get("Content-Type") != "text/plain; charset=utf-8" {
+		//	log.Println("Unsupported Content-Type")
+		//	http.Error(res, "Unsupported Content-Type", http.StatusUnsupportedMediaType)
+		//	return
+		//}
 
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
