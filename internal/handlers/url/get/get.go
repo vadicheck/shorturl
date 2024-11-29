@@ -2,6 +2,7 @@ package get
 
 import (
 	"context"
+	"github.com/go-chi/chi/v5"
 	"github.com/vadicheck/shorturl/internal/services/storage"
 	"log"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 
 func New(ctx context.Context, storage storage.URLStorage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		id := req.PathValue("id")
+		id := chi.URLParam(req, "id")
 
 		// Костыль, пока не решен вопрос с получением id из path в тестах
 		if id == "" {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/go-chi/chi/v5"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
 	"github.com/vadicheck/shorturl/internal/models"
@@ -39,13 +40,14 @@ func main() {
 
 	ctx := context.Background()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{id}", geturl.New(ctx, storage))
-	mux.HandleFunc("POST /", saveurl.New(ctx, urlService))
+	r := chi.NewRouter()
+
+	r.Get("/{id}", geturl.New(ctx, storage))
+	r.Post("/", saveurl.New(ctx, urlService))
 
 	log.Println("Server started")
 
-	err = http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		panic(err)
 	}
