@@ -10,7 +10,7 @@ var Config struct {
 
 func ParseFlags() {
 	flag.StringVar(&Config.A, "a", "localhost:8080", "HTTP server startup address")
-	flag.StringVar(&Config.B, "b", "http://localhost:8000", "the base address of the resulting shortened URL")
+	flag.StringVar(&Config.B, "b", "http://localhost:8080", "the base address of the resulting shortened URL")
 	flag.StringVar(&Config.StoragePath, "storage-path", "", "path to storage")
 	flag.Parse()
 }
