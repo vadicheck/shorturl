@@ -2,36 +2,35 @@ package main
 
 import (
 	"context"
-	"flag"
 	"github.com/go-chi/chi/v5"
+	"github.com/vadicheck/shorturl/internal/config"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
 	"github.com/vadicheck/shorturl/internal/models"
+	stor "github.com/vadicheck/shorturl/internal/services/storage"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
+	"github.com/vadicheck/shorturl/internal/services/storage/sqlite"
 	"github.com/vadicheck/shorturl/internal/services/url"
 	"log"
 	"net/http"
 )
 
 func main() {
-	var storagePath string
+	config.ParseFlags()
 
-	flag.StringVar(&storagePath, "storage-path", "./storage/database.db", "path to storage")
-	flag.Parse()
+	var err error
+	var storage stor.URLStorage
 
-	if storagePath == "" {
-		log.Fatal("Storage path is required")
-		return
-	}
-
-	//storage, err := sqlite.New(storagePath)
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	storage, err := memory.New(map[string]models.URL{})
-	if err != nil {
-		panic(err)
+	if config.Config.StoragePath == "" {
+		storage, err = memory.New(map[string]models.URL{})
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		storage, err = sqlite.New(config.Config.StoragePath)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	urlService := url.Service{
@@ -45,9 +44,9 @@ func main() {
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
 
-	log.Println("Server started")
+	log.Println("Server started:", config.Config.A)
 
-	err = http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(config.Config.A, r)
 	if err != nil {
 		panic(err)
 	}

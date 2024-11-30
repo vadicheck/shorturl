@@ -2,6 +2,7 @@ package save
 
 import (
 	"context"
+	"github.com/vadicheck/shorturl/internal/config"
 	surl "github.com/vadicheck/shorturl/internal/services/url"
 	"github.com/vadicheck/shorturl/internal/services/validators/url"
 	"io"
@@ -11,12 +12,6 @@ import (
 
 func New(ctx context.Context, service surl.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		//if req.Header.Get("Content-Type") != "text/plain; charset=utf-8" {
-		//	log.Println("Unsupported Content-Type")
-		//	http.Error(res, "Unsupported Content-Type", http.StatusUnsupportedMediaType)
-		//	return
-		//}
-
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
 			log.Println("Error reading body: ", err)
@@ -45,6 +40,6 @@ func New(ctx context.Context, service surl.Service) http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		res.Write([]byte("http://localhost:8080/" + code))
+		res.Write([]byte(config.Config.B + "/" + code))
 	}
 }
