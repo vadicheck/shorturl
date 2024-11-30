@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vadicheck/shorturl/internal/config"
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
 	"github.com/vadicheck/shorturl/internal/services/url"
@@ -68,6 +69,8 @@ func TestNew(t *testing.T) {
 	}
 
 	ctx := context.Background()
+
+	config.ParseFlags()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
