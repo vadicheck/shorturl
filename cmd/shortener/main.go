@@ -46,7 +46,7 @@ func main() {
 
 	log.Println("Server started:", config.Config.A)
 
-	err = http.ListenAndServe(":"+config.Config.A, r)
+	err = http.ListenAndServe(config.Config.A, r)
 	if err != nil {
 		panic(err)
 	}
