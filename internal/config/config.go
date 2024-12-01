@@ -17,7 +17,7 @@ func ParseFlags() {
 	Config.StoragePath = os.Getenv("STORAGE_PATH")
 
 	if Config.A == "" {
-		flag.StringVar(&Config.A, "a", "localhost:8080", "HTTP server startup address")
+		flag.StringVar(&Config.A, "a", "8080", "HTTP server startup address")
 	}
 
 	if Config.B == "" {
