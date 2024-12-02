@@ -41,6 +41,6 @@ func New(ctx context.Context, service surl.Service) http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		res.Write([]byte(config.Config.BaseUrl + "/" + code))
+		res.Write([]byte(config.Config.BaseURL + "/" + code))
 	}
 }
