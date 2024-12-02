@@ -11,31 +11,6 @@ import (
 	"testing"
 )
 
-type Storage struct {
-	urls map[string]models.URL
-}
-
-func NewStorage(urls map[string]models.URL) (*Storage, error) {
-	return &Storage{urls}, nil
-}
-
-func (s *Storage) SaveURL(ctx context.Context, code string, url string) (int64, error) {
-	return 0, nil
-}
-
-func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {
-	url, ok := s.urls[code]
-	if !ok {
-		return models.URL{}, nil
-	}
-
-	return url, nil
-}
-
-func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, error) {
-	return models.URL{}, nil
-}
-
 func TestNew(t *testing.T) {
 	type want struct {
 		contentType string
