@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vadicheck/shorturl/internal/config"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
@@ -11,7 +12,7 @@ import (
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
 	"github.com/vadicheck/shorturl/internal/services/storage/sqlite"
 	"github.com/vadicheck/shorturl/internal/services/url"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -44,9 +45,9 @@ func main() {
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
 
-	log.Println("Server started:", config.Config.A)
+	slog.Info(fmt.Sprintf("Server started: %s", config.Config.ServerAddress))
 
-	err = http.ListenAndServe(config.Config.A, r)
+	err = http.ListenAndServe(config.Config.ServerAddress, r)
 	if err != nil {
 		panic(err)
 	}
