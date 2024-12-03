@@ -5,9 +5,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vadicheck/shorturl/internal/config"
-	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
-	"github.com/vadicheck/shorturl/internal/services/url"
+	"github.com/vadicheck/shorturl/internal/services/urlservice"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -28,7 +27,6 @@ func TestNew(t *testing.T) {
 		name    string
 		want    want
 		request request
-		urls    map[string]models.URL
 	}{
 		{
 			name: "simple test #1",
@@ -40,7 +38,6 @@ func TestNew(t *testing.T) {
 			request: request{
 				url: "https://practicum.yandex.ru/",
 			},
-			urls: map[string]models.URL{},
 		},
 		{
 			name: "Empty URL",
@@ -52,7 +49,6 @@ func TestNew(t *testing.T) {
 			request: request{
 				url: "",
 			},
-			urls: map[string]models.URL{},
 		},
 		{
 			name: "Invalid URL",
@@ -64,7 +60,6 @@ func TestNew(t *testing.T) {
 			request: request{
 				url: "et4bnnny4h",
 			},
-			urls: map[string]models.URL{},
 		},
 	}
 
@@ -78,14 +73,10 @@ func TestNew(t *testing.T) {
 			req.Header.Set("Content-Type", "text/plain")
 			w := httptest.NewRecorder()
 
-			storage, err := memory.New(tt.urls)
+			storage, err := memory.New()
 			require.NoError(t, err)
 
-			urlService := url.Service{
-				Storage: storage,
-			}
-
-			New(ctx, urlService)(w, req)
+			New(ctx, urlservice.New(storage))(w, req)
 
 			result := w.Result()
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)

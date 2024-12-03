@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/vadicheck/shorturl/internal/config"
-	surl "github.com/vadicheck/shorturl/internal/services/url"
-	"github.com/vadicheck/shorturl/internal/services/validators/url"
+	"github.com/vadicheck/shorturl/internal/services/urlservice"
+	"github.com/vadicheck/shorturl/pkg/validators/url"
 	"io"
 	"log/slog"
 	"net/http"
 )
 
-func New(ctx context.Context, service surl.Service) http.HandlerFunc {
+func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
@@ -21,7 +21,7 @@ func New(ctx context.Context, service surl.Service) http.HandlerFunc {
 		}
 		defer req.Body.Close()
 
-		slog.Error(fmt.Sprintf("Received request body: %s", body))
+		slog.Info(fmt.Sprintf("Received request body: %s", body))
 
 		reqURL := string(body)
 

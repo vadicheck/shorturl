@@ -3,21 +3,18 @@ package get
 import (
 	"context"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/vadicheck/shorturl/internal/services/storage"
+	"github.com/vadicheck/shorturl/internal/models"
 	"log/slog"
 	"net/http"
-	"strings"
 )
 
-func New(ctx context.Context, storage storage.URLStorage) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		id := chi.URLParam(req, "id")
+type URLStorage interface {
+	GetURLByID(ctx context.Context, code string) (models.URL, error)
+}
 
-		// Костыль, пока не решен вопрос с получением id из path в тестах
-		if id == "" {
-			id = strings.Trim(req.URL.String(), "/")
-		}
+func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		id := req.PathValue("id")
 
 		if id == "" {
 			slog.Error("id is empty")

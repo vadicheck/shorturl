@@ -18,14 +18,14 @@ func TestNew(t *testing.T) {
 		response    string
 	}
 	tests := []struct {
-		name    string
-		request string
-		want    want
-		urls    map[string]models.URL
+		name string
+		code string
+		want want
+		urls map[string]models.URL
 	}{
 		{
-			name:    "simple test #1",
-			request: "/code",
+			name: "simple test #1",
+			code: "code",
 			want: want{
 				contentType: "text/plain",
 				statusCode:  http.StatusTemporaryRedirect,
@@ -40,8 +40,8 @@ func TestNew(t *testing.T) {
 			},
 		},
 		{
-			name:    "id is empty",
-			request: "/",
+			name: "id is empty",
+			code: "",
 			want: want{
 				contentType: "text/plain; charset=utf-8",
 				statusCode:  http.StatusBadRequest,
@@ -56,8 +56,8 @@ func TestNew(t *testing.T) {
 			},
 		},
 		{
-			name:    "url not found",
-			request: "/nonexistent",
+			name: "url not found",
+			code: "nonexistent",
 			want: want{
 				contentType: "text/plain; charset=utf-8",
 				statusCode:  http.StatusNotFound,
@@ -77,11 +77,18 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, tt.request, nil)
+			req := httptest.NewRequest(http.MethodGet, "/"+tt.code, nil)
 			w := httptest.NewRecorder()
 
-			storage, err := memory.New(tt.urls)
+			storage, err := memory.New()
 			require.NoError(t, err)
+
+			for code, url := range tt.urls {
+				_, err = storage.SaveURL(ctx, code, url.URL)
+				require.NoError(t, err)
+			}
+
+			req.SetPathValue("id", tt.code)
 
 			New(ctx, storage)(w, req)
 

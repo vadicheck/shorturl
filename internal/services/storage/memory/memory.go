@@ -9,8 +9,8 @@ type Storage struct {
 	urls map[string]models.URL
 }
 
-func New(urls map[string]models.URL) (*Storage, error) {
-	return &Storage{urls}, nil
+func New() (*Storage, error) {
+	return &Storage{make(map[string]models.URL)}, nil
 }
 
 func (s *Storage) SaveURL(ctx context.Context, code string, url string) (int64, error) {
