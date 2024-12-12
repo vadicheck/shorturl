@@ -3,12 +3,13 @@ package save
 import (
 	"context"
 	"fmt"
-	"github.com/vadicheck/shorturl/internal/config"
-	"github.com/vadicheck/shorturl/internal/services/urlservice"
-	"github.com/vadicheck/shorturl/pkg/validators/url"
 	"io"
 	"log/slog"
 	"net/http"
+
+	"github.com/vadicheck/shorturl/internal/config"
+	"github.com/vadicheck/shorturl/internal/services/urlservice"
+	"github.com/vadicheck/shorturl/pkg/validators/url"
 )
 
 func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
@@ -41,6 +42,12 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		res.Write([]byte(config.Config.BaseURL + "/" + code))
+
+		_, err = res.Write([]byte(config.Config.BaseURL + "/" + code))
+
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error writing response: %s", err))
+			return
+		}
 	}
 }
