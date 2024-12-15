@@ -2,16 +2,18 @@ package save
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/vadicheck/shorturl/internal/config"
-	"github.com/vadicheck/shorturl/internal/services/storage/memory"
-	"github.com/vadicheck/shorturl/internal/services/urlservice"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/vadicheck/shorturl/internal/config"
+	"github.com/vadicheck/shorturl/internal/services/storage/memory"
+	"github.com/vadicheck/shorturl/internal/services/urlservice"
 )
 
 func TestNew(t *testing.T) {

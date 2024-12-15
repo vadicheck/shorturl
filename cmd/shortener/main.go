@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/vadicheck/shorturl/internal/app"
 	"log"
+
+	"github.com/vadicheck/shorturl/internal/app"
 )
 
 func main() {

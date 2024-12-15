@@ -2,6 +2,7 @@ package urlservice
 
 import (
 	"context"
+
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/pkg/random"
 )
@@ -20,6 +21,8 @@ type URLStorage interface {
 	GetURLByURL(ctx context.Context, url string) (models.URL, error)
 }
 
+const defaultCodeLength = 10
+
 func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) {
 	mURL, err := s.storage.GetURLByURL(ctx, sourceURL)
 	if err != nil {
@@ -33,7 +36,10 @@ func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) 
 	isUnique := false
 
 	for !isUnique {
-		code = random.GenerateRandomString(10)
+		code, err = random.GenerateRandomString(defaultCodeLength)
+		if err != nil {
+			return "", err
+		}
 
 		mURL, err = s.storage.GetURLByID(ctx, code)
 		if err != nil {

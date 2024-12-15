@@ -3,16 +3,20 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/vadicheck/shorturl/internal/config"
-	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
-	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
-	"github.com/vadicheck/shorturl/internal/services/storage/memory"
-	"github.com/vadicheck/shorturl/internal/services/storage/sqlite"
-	"github.com/vadicheck/shorturl/internal/services/urlservice"
 	"log"
 	"log/slog"
 	"net/http"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/vadicheck/shorturl/internal/config"
+	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
+	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
+	middlewarelogger "github.com/vadicheck/shorturl/internal/middleware/logger"
+	"github.com/vadicheck/shorturl/internal/services/storage/memory"
+	"github.com/vadicheck/shorturl/internal/services/storage/sqlite"
+	"github.com/vadicheck/shorturl/internal/services/urlservice"
 )
 
 type App struct {
@@ -21,9 +25,17 @@ type App struct {
 }
 
 func (a *App) Run() error {
+	server := &http.Server{
+		Addr:         config.Config.ServerAddress,
+		Handler:      a.router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
+	}
+
 	slog.Info(fmt.Sprintf("Server starting: %s", a.serverAddress))
 
-	err := http.ListenAndServe(config.Config.ServerAddress, a.router)
+	err := server.ListenAndServe()
 	if err != nil {
 		slog.Error("Error starting server")
 		return err
@@ -55,6 +67,7 @@ func New() *App {
 	ctx := context.Background()
 
 	r := chi.NewRouter()
+	r.Use(middlewarelogger.New())
 
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
