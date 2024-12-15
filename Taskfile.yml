@@ -11,6 +11,12 @@ tasks:
     cmds:
       - go run ./cmd/shortener --storage-path=./storage/database.db
 
+  test:
+    desc: "Run tests"
+    cmds:
+      - go test -v ./internal/handlers/url/save
+      - go test -v ./internal/handlers/url/get
+
   install-linter:
     desc: Install golangci-lint based on the GOOS value from go env
     cmds:

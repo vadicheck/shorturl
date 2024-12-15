@@ -13,6 +13,7 @@ import (
 	"github.com/vadicheck/shorturl/internal/config"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
+	middlewarelogger "github.com/vadicheck/shorturl/internal/middleware/logger"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
 	"github.com/vadicheck/shorturl/internal/services/storage/sqlite"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
@@ -66,6 +67,7 @@ func New() *App {
 	ctx := context.Background()
 
 	r := chi.NewRouter()
+	r.Use(middlewarelogger.New())
 
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
