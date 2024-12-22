@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
+
 	"github.com/go-chi/chi/v5"
 
 	"github.com/vadicheck/shorturl/internal/config"
@@ -71,6 +73,7 @@ func New() *App {
 
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
+	r.Post("/api/shorten", shorten.New(ctx, urlService))
 
 	return &App{
 		router:        r,
