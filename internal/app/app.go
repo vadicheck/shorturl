@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vadicheck/shorturl/internal/middleware/gzip"
+
 	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
 
 	"github.com/go-chi/chi/v5"
@@ -72,8 +74,8 @@ func New() *App {
 	r.Use(middlewarelogger.New())
 
 	r.Get("/{id}", geturl.New(ctx, storage))
-	r.Post("/", saveurl.New(ctx, urlService))
-	r.Post("/api/shorten", shorten.New(ctx, urlService))
+	r.Post("/", gzip.New(saveurl.New(ctx, urlService)))
+	r.Post("/api/shorten", gzip.New(shorten.New(ctx, urlService)))
 
 	return &App{
 		router:        r,
