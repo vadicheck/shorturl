@@ -1,41 +1,47 @@
 package gzip
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/vadicheck/shorturl/pkg/compress"
 )
 
-func New(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ow := w
+func New() func(next http.Handler) http.Handler {
+	slog.Info("gzip middleware enabled")
 
-		contentType := r.Header.Get("Content-Type")
-		acceptEncoding := r.Header.Get("Accept-Encoding")
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ow := w
 
-		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+			contentType := r.Header.Get("Content-Type")
+			acceptEncoding := r.Header.Get("Accept-Encoding")
 
-		if supportsGzip && isCompressibleContentType(contentType) {
-			cw := compress.NewCompressWriter(w)
-			ow = cw
-			defer cw.Close()
-		}
+			supportsGzip := strings.Contains(acceptEncoding, "gzip")
 
-		contentEncoding := r.Header.Get("Content-Encoding")
-		sendsGzip := strings.Contains(contentEncoding, "gzip")
-		if sendsGzip {
-			cr, err := compress.NewCompressReader(r.Body)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
+			if supportsGzip && isCompressibleContentType(contentType) {
+				cw := compress.NewCompressWriter(w)
+				ow = cw
+				defer cw.Close()
 			}
 
-			r.Body = cr
-			defer cr.Close()
-		}
+			contentEncoding := r.Header.Get("Content-Encoding")
+			sendsGzip := strings.Contains(contentEncoding, "gzip")
+			if sendsGzip {
+				cr, err := compress.NewCompressReader(r.Body)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
 
-		h.ServeHTTP(ow, r)
+				r.Body = cr
+				defer cr.Close()
+			}
+
+			next.ServeHTTP(ow, r)
+		}
+		return http.HandlerFunc(fn)
 	}
 }
 

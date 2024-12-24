@@ -71,11 +71,13 @@ func New() *App {
 	ctx := context.Background()
 
 	r := chi.NewRouter()
+
+	r.Use(gzip.New())
 	r.Use(middlewarelogger.New())
 
 	r.Get("/{id}", geturl.New(ctx, storage))
-	r.Post("/", gzip.New(saveurl.New(ctx, urlService)))
-	r.Post("/api/shorten", gzip.New(shorten.New(ctx, urlService)))
+	r.Post("/", saveurl.New(ctx, urlService))
+	r.Post("/api/shorten", shorten.New(ctx, urlService))
 
 	return &App{
 		router:        r,
