@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -100,7 +101,13 @@ func TestNew(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			storage, err := memory.New()
+			tempFile, err := os.CreateTemp("", "tempfile-*.json")
+			if err != nil {
+				require.NoError(t, err)
+			}
+			defer tempFile.Close()
+
+			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
 
 			New(ctx, urlservice.New(storage))(w, req)

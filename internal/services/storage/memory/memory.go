@@ -7,11 +7,32 @@ import (
 )
 
 type Storage struct {
-	urls map[string]models.URL
+	producer *Producer
+	consumer *Consumer
+	urls     map[string]models.URL
 }
 
-func New() (*Storage, error) {
-	return &Storage{make(map[string]models.URL)}, nil
+func New(fileName string) (*Storage, error) {
+	producer, err := NewProducer(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	consumer, err := NewConsumer(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	urls, err := consumer.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Storage{
+		producer: producer,
+		consumer: consumer,
+		urls:     urls,
+	}, nil
 }
 
 func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
@@ -24,6 +45,11 @@ func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) 
 	}
 
 	s.urls[code] = mURL
+
+	err := s.producer.WriteURL(&mURL)
+	if err != nil {
+		return 0, err
+	}
 
 	return id, nil
 }

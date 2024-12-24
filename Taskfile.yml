@@ -16,6 +16,12 @@ tasks:
     cmds:
       - go test -v ./internal/handlers/url/save
       - go test -v ./internal/handlers/url/get
+      - go test -v ./internal/handlers/url/shorten
+
+  imports:
+    desc: "Run imports"
+    cmds:
+      - goimports -local "github.com/vadicheck/shorturl" -w .
 
   install-linter:
     desc: Install golangci-lint based on the GOOS value from go env

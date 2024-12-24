@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -82,7 +83,13 @@ func TestNew(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.code, nil)
 			w := httptest.NewRecorder()
 
-			storage, err := memory.New()
+			tempFile, err := os.CreateTemp("", "tempfile-*.json")
+			if err != nil {
+				require.NoError(t, err)
+			}
+			defer tempFile.Close()
+
+			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
 
 			for code, url := range tt.urls {

@@ -54,16 +54,18 @@ func New() *App {
 	var err error
 	var storage urlservice.URLStorage
 
-	if config.Config.StoragePath == "" {
-		storage, err = memory.New()
-		if err != nil {
-			log.Panic(err)
-		}
-	} else {
+	if config.Config.StoragePath != "" {
 		storage, err = sqlite.New(config.Config.StoragePath)
 		if err != nil {
 			log.Panic(err)
 		}
+		slog.Info("Storage: sqlite")
+	} else {
+		storage, err = memory.New(config.Config.FileStoragePath)
+		if err != nil {
+			log.Panic(err)
+		}
+		slog.Info("Storage: memory")
 	}
 
 	urlService := urlservice.New(storage)
