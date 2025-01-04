@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -21,14 +20,10 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 
 		dec := json.NewDecoder(req.Body)
 		if err := dec.Decode(&request); err != nil {
-			responseError := shorten.ResponseError{
-				Error: "Invalid JSON body",
-			}
-
 			res.Header().Set("Content-Type", "application/json")
 			res.WriteHeader(http.StatusInternalServerError)
-			if err := json.NewEncoder(res).Encode(responseError); err != nil {
-				log.Println("cannot encode response JSON body:", err)
+			if err := json.NewEncoder(res).Encode(shorten.NewError("Invalid JSON body")); err != nil {
+				slog.Error(fmt.Sprintf("cannot encode response JSON body: %s", err))
 			}
 			return
 		}
@@ -37,14 +32,10 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 		if err != nil {
 			slog.Error(fmt.Sprintf("URL is invalid: %s", err))
 
-			responseError := shorten.ResponseError{
-				Error: "URL is invalid",
-			}
-
 			res.Header().Set("Content-Type", "application/json")
 			res.WriteHeader(http.StatusBadRequest)
-			if err := json.NewEncoder(res).Encode(responseError); err != nil {
-				log.Println("URL is invalid:", err)
+			if err := json.NewEncoder(res).Encode(shorten.NewError("URL is invalid")); err != nil {
+				slog.Error(fmt.Sprintf("URL is invalid: %s", err))
 			}
 			return
 		}
@@ -53,14 +44,10 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 		if err != nil {
 			slog.Error(fmt.Sprintf("Error saving the record: %s", err))
 
-			responseError := shorten.ResponseError{
-				Error: "Failed to save the record",
-			}
-
 			res.Header().Set("Content-Type", "application/json")
 			res.WriteHeader(http.StatusBadRequest)
-			if err := json.NewEncoder(res).Encode(responseError); err != nil {
-				log.Println("Failed to save the record:", err)
+			if err := json.NewEncoder(res).Encode(shorten.NewError("Failed to save the record")); err != nil {
+				slog.Error(fmt.Sprintf("Failed to save the record: %s", err))
 			}
 			return
 		}
@@ -76,14 +63,10 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 		if err := enc.Encode(response); err != nil {
 			slog.Error("error encoding response", sl.Err(err))
 
-			responseError := shorten.ResponseError{
-				Error: "Failed encoding response",
-			}
-
 			res.Header().Set("Content-Type", "application/json")
 			res.WriteHeader(http.StatusInternalServerError)
-			if err := json.NewEncoder(res).Encode(responseError); err != nil {
-				log.Println("Failed encoding response:", err)
+			if err := json.NewEncoder(res).Encode(shorten.NewError("Failed encoding response")); err != nil {
+				slog.Error(fmt.Sprintf("Failed encoding response: %s", err))
 			}
 			return
 		}

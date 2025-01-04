@@ -11,3 +11,9 @@ type Response struct {
 type ResponseError struct {
 	Error string `json:"error"`
 }
+
+func NewError(err string) ResponseError {
+	return ResponseError{
+		Error: err,
+	}
+}

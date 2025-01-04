@@ -11,8 +11,6 @@ type Writer struct {
 	zw *gzip.Writer
 }
 
-const httpNoSuccessCodes = 300
-
 func NewCompressWriter(w http.ResponseWriter) *Writer {
 	return &Writer{
 		w:  w,
@@ -29,7 +27,7 @@ func (c *Writer) Write(p []byte) (int, error) {
 }
 
 func (c *Writer) WriteHeader(statusCode int) {
-	if statusCode < httpNoSuccessCodes {
+	if statusCode < http.StatusMultipleChoices {
 		c.w.Header().Set("Content-Encoding", "gzip")
 	}
 	c.w.WriteHeader(statusCode)
