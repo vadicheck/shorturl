@@ -3,7 +3,6 @@ package memory
 import (
 	"encoding/json"
 	"io"
-	"os"
 
 	"github.com/vadicheck/shorturl/internal/models"
 )
@@ -11,19 +10,14 @@ import (
 const permission = 0666
 
 type Consumer struct {
-	file    *os.File
+	reader  *io.Reader
 	decoder *json.Decoder
 }
 
-func NewConsumer(fileName string) (*Consumer, error) {
-	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, permission)
-	if err != nil {
-		return nil, err
-	}
-
+func NewConsumer(reader io.Reader) (*Consumer, error) {
 	return &Consumer{
-		file:    file,
-		decoder: json.NewDecoder(file),
+		reader:  &reader,
+		decoder: json.NewDecoder(reader),
 	}, nil
 }
 
@@ -51,8 +45,4 @@ func (c *Consumer) Load() (map[string]models.URL, error) {
 	}
 
 	return urlMap, nil
-}
-
-func (c *Consumer) Close() error {
-	return c.file.Close()
 }

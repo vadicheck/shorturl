@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"os"
 
 	"github.com/vadicheck/shorturl/internal/models"
 )
@@ -13,12 +14,21 @@ type Storage struct {
 }
 
 func New(fileName string) (*Storage, error) {
-	producer, err := NewProducer(fileName)
+	pFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, permission)
+	if err != nil {
+		return nil, err
+	}
+	producer, err := NewProducer(pFile)
 	if err != nil {
 		return nil, err
 	}
 
-	consumer, err := NewConsumer(fileName)
+	cFile, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, permission)
+	if err != nil {
+		return nil, err
+	}
+
+	consumer, err := NewConsumer(cFile)
 	if err != nil {
 		return nil, err
 	}

@@ -2,32 +2,23 @@ package memory
 
 import (
 	"encoding/json"
-	"os"
+	"io"
 
 	"github.com/vadicheck/shorturl/internal/models"
 )
 
 type Producer struct {
-	file    *os.File
+	writer  *io.Writer
 	encoder *json.Encoder
 }
 
-func NewProducer(fileName string) (*Producer, error) {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, permission)
-	if err != nil {
-		return nil, err
-	}
-
+func NewProducer(writer io.Writer) (*Producer, error) {
 	return &Producer{
-		file:    file,
-		encoder: json.NewEncoder(file),
+		writer:  &writer,
+		encoder: json.NewEncoder(writer),
 	}, nil
 }
 
 func (p *Producer) WriteURL(url *models.URL) error {
 	return p.encoder.Encode(&url)
-}
-
-func (p *Producer) Close() error {
-	return p.file.Close()
 }
