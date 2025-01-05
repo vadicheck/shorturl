@@ -2,18 +2,50 @@ package memory
 
 import (
 	"context"
+	"os"
+
 	"github.com/vadicheck/shorturl/internal/models"
 )
 
 type Storage struct {
-	urls map[string]models.URL
+	producer *Producer
+	consumer *Consumer
+	urls     map[string]models.URL
 }
 
-func New() (*Storage, error) {
-	return &Storage{make(map[string]models.URL)}, nil
+func New(fileName string) (*Storage, error) {
+	pFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, permission)
+	if err != nil {
+		return nil, err
+	}
+	producer, err := NewProducer(pFile)
+	if err != nil {
+		return nil, err
+	}
+
+	cFile, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, permission)
+	if err != nil {
+		return nil, err
+	}
+
+	consumer, err := NewConsumer(cFile)
+	if err != nil {
+		return nil, err
+	}
+
+	urls, err := consumer.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Storage{
+		producer: producer,
+		consumer: consumer,
+		urls:     urls,
+	}, nil
 }
 
-func (s *Storage) SaveURL(ctx context.Context, code string, url string) (int64, error) {
+func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
 	id := int64(len(s.urls) + 1)
 
 	mURL := models.URL{
@@ -23,6 +55,11 @@ func (s *Storage) SaveURL(ctx context.Context, code string, url string) (int64, 
 	}
 
 	s.urls[code] = mURL
+
+	err := s.producer.WriteURL(&mURL)
+	if err != nil {
+		return 0, err
+	}
 
 	return id, nil
 }

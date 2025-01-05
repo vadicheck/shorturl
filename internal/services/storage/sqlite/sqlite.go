@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/mattn/go-sqlite3"
+
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/services/storage"
 )
@@ -23,7 +25,7 @@ func New(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
-func (s *Storage) SaveURL(ctx context.Context, code string, url string) (int64, error) {
+func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
 	const op = "storage.sqlite.SaveURL"
 
 	stmt, err := s.db.Prepare("INSERT INTO main.urls (code, url) VALUES (?,?)")

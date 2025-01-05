@@ -1,17 +1,26 @@
 package random
 
 import (
-	"math/rand"
+	"crypto/rand"
 )
 
 const (
 	letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
-func GenerateRandomString(length int) string {
+func GenerateRandomString(length int) (string, error) {
 	result := make([]byte, length)
-	for i := range result {
-		result[i] = letters[rand.Intn(len(letters))]
+	maxInt := byte(len(letters))
+
+	randomBytes := make([]byte, length)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return "", err
 	}
-	return string(result)
+
+	for i := range result {
+		result[i] = letters[randomBytes[i]%maxInt]
+	}
+
+	return string(result), nil
 }

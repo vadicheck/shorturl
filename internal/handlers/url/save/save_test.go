@@ -2,16 +2,19 @@ package save
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/vadicheck/shorturl/internal/config"
-	"github.com/vadicheck/shorturl/internal/services/storage/memory"
-	"github.com/vadicheck/shorturl/internal/services/urlservice"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/vadicheck/shorturl/internal/config"
+	"github.com/vadicheck/shorturl/internal/services/storage/memory"
+	"github.com/vadicheck/shorturl/internal/services/urlservice"
 )
 
 func TestNew(t *testing.T) {
@@ -73,7 +76,13 @@ func TestNew(t *testing.T) {
 			req.Header.Set("Content-Type", "text/plain")
 			w := httptest.NewRecorder()
 
-			storage, err := memory.New()
+			tempFile, err := os.CreateTemp("", "tempfile-*.json")
+			if err != nil {
+				require.NoError(t, err)
+			}
+			defer tempFile.Close()
+
+			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
 
 			New(ctx, urlservice.New(storage))(w, req)

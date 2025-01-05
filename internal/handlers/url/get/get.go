@@ -3,9 +3,10 @@ package get
 import (
 	"context"
 	"fmt"
-	"github.com/vadicheck/shorturl/internal/models"
 	"log/slog"
 	"net/http"
+
+	"github.com/vadicheck/shorturl/internal/models"
 )
 
 type URLStorage interface {
