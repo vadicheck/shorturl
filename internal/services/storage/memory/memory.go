@@ -45,6 +45,10 @@ func New(fileName string) (*Storage, error) {
 	}, nil
 }
 
+func (s *Storage) PingContext(ctx context.Context) error {
+	return nil
+}
+
 func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
 	id := int64(len(s.urls) + 1)
 
