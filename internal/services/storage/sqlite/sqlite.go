@@ -25,6 +25,10 @@ func New(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
+func (s *Storage) PingContext(ctx context.Context) error {
+	return s.db.PingContext(ctx)
+}
+
 func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
 	const op = "storage.sqlite.SaveURL"
 
