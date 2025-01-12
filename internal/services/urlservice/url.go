@@ -16,6 +16,7 @@ func New(storage URLStorage) *Service {
 }
 
 type URLStorage interface {
+	PingContext(ctx context.Context) error
 	SaveURL(ctx context.Context, code string, url string) (int64, error)
 	GetURLByID(ctx context.Context, code string) (models.URL, error)
 	GetURLByURL(ctx context.Context, url string) (models.URL, error)

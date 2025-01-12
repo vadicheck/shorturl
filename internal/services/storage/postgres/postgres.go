@@ -1,4 +1,4 @@
-package sqlite
+package postgres
 
 import (
 	"context"
@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mattn/go-sqlite3"
+	"github.com/jackc/pgx/v5/pgconn"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/services/storage"
@@ -16,10 +18,10 @@ type Storage struct {
 	db *sql.DB
 }
 
-func New(storagePath string) (*Storage, error) {
-	db, err := sql.Open("sqlite3", storagePath)
+func New(databaseDsn string) (*Storage, error) {
+	db, err := sql.Open("pgx", databaseDsn)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", storagePath, err)
+		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
 	return &Storage{db: db}, nil
@@ -30,26 +32,24 @@ func (s *Storage) PingContext(ctx context.Context) error {
 }
 
 func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
-	const op = "storage.sqlite.SaveURL"
+	const op = "storage.postgres.SaveURL"
 
-	stmt, err := s.db.Prepare("INSERT INTO main.urls (code, url) VALUES (?,?)")
+	stmt, err := s.db.Prepare("INSERT INTO public.urls (code, url) VALUES ($1,$2) RETURNING id")
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
+	defer stmt.Close()
 
-	res, err := stmt.ExecContext(ctx, code, url)
+	var id int64
+
+	err = stmt.QueryRowContext(ctx, code, url).Scan(&id)
 	if err != nil {
-		var sqliteErr sqlite3.Error
+		var pgErr *pgconn.PgError
 
-		if errors.As(err, &sqliteErr) && errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return 0, fmt.Errorf("%s: %w", op, storage.ErrURLOrCodeExists)
 		}
 
-		return 0, fmt.Errorf("%s: %w", op, err)
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -57,15 +57,15 @@ func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) 
 }
 
 func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {
-	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE code=?", code)
+	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE code=$1", code)
 
-	return s.scan(row, "storage.sqlite.GetURLByID")
+	return s.scan(row, "storage.postgres.GetURLByID")
 }
 
 func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, error) {
-	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE url=?", url)
+	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE url=$1", url)
 
-	return s.scan(row, "storage.sqlite.GetURLByURL")
+	return s.scan(row, "storage.postgres.GetURLByURL")
 }
 
 func (s *Storage) scan(row *sql.Row, op string) (models.URL, error) {
