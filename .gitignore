@@ -25,3 +25,6 @@ vendor/
 devopsmastertest-darwin-arm64
 golangci-lint
 .golangci.yml
+
+.env
+education/*
