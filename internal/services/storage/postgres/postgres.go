@@ -9,7 +9,6 @@ import (
 	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
-
 	"github.com/jackc/pgx/v5/pgconn"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -17,6 +16,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/vadicheck/shorturl/internal/models"
+	"github.com/vadicheck/shorturl/internal/repository"
 	"github.com/vadicheck/shorturl/internal/services/storage"
 )
 
@@ -72,6 +72,48 @@ func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) 
 	}
 
 	return id, nil
+}
+
+func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto) (*[]repository.BatchURL, error) {
+	entities := make([]repository.BatchURL, 0)
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("can't begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	for _, urlDTO := range *dto {
+		_, err := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL)
+		if err != nil {
+			if errors.Is(err, storage.ErrURLOrCodeExists) {
+				mURL, err := s.GetURLByURL(ctx, urlDTO.OriginalURL)
+				if err != nil {
+					return nil, fmt.Errorf("failed to retrieve URL: %w", err)
+				}
+
+				entities = append(entities, repository.BatchURL{
+					CorrelationID: urlDTO.CorrelationID,
+					ShortCode:     mURL.Code,
+				})
+				continue
+			} else {
+				return nil, fmt.Errorf("failed to save URL: %w", err)
+			}
+		}
+
+		entities = append(entities, repository.BatchURL{
+			CorrelationID: urlDTO.CorrelationID,
+			ShortCode:     urlDTO.ShortCode,
+		})
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, fmt.Errorf("can't commit transaction: %w", err)
+	}
+
+	return &entities, nil
 }
 
 func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {

@@ -1,9 +1,8 @@
-package shorten
+package batch
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -11,13 +10,17 @@ import (
 	httpError "github.com/vadicheck/shorturl/internal/http/error"
 	"github.com/vadicheck/shorturl/internal/models/shorten"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
+	"github.com/vadicheck/shorturl/internal/validator"
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
-	"github.com/vadicheck/shorturl/pkg/validators/url"
 )
 
-func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
+func New(
+	ctx context.Context,
+	service *urlservice.Service,
+	validator validator.CreateBatchURLValidator,
+) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		var request shorten.CreateURLRequest
+		var request []shorten.CreateBatchURLRequest
 
 		dec := json.NewDecoder(req.Body)
 		if err := dec.Decode(&request); err != nil {
@@ -25,21 +28,25 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 			return
 		}
 
-		_, err := url.IsValid(request.URL)
-		if err != nil {
-			httpError.RespondWithError(res, http.StatusBadRequest, "URL is invalid")
+		errs := validator.CreateBatchShortURL(&request)
+		if len(errs.Errors) != 0 {
+			httpError.RespondWithError(res, http.StatusBadRequest, errs.Error())
 			return
 		}
 
-		code, err := service.Create(ctx, request.URL)
+		batchURL, err := service.CreateBatch(ctx, &request)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Error saving the record: %s", err))
-			httpError.RespondWithError(res, http.StatusBadRequest, "Failed to save the record")
+			httpError.RespondWithError(res, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		response := shorten.CreateURLResponse{
-			Result: config.Config.BaseURL + "/" + code,
+		response := make([]shorten.CreateBatchURLResponse, 0)
+
+		for _, url := range *batchURL {
+			response = append(response, shorten.CreateBatchURLResponse{
+				CorrelationID: url.CorrelationID,
+				ShortURL:      config.Config.BaseURL + "/" + url.ShortCode,
+			})
 		}
 
 		res.Header().Set("Content-Type", "application/json")

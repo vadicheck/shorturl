@@ -2,9 +2,11 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/vadicheck/shorturl/internal/models"
+	"github.com/vadicheck/shorturl/internal/repository"
 )
 
 type Storage struct {
@@ -66,6 +68,24 @@ func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) 
 	}
 
 	return id, nil
+}
+
+func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto) (*[]repository.BatchURL, error) {
+	entities := make([]repository.BatchURL, 0)
+
+	for _, urlDTO := range *dto {
+		_, err := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to save URL: %w", err)
+		}
+
+		entities = append(entities, repository.BatchURL{
+			CorrelationID: urlDTO.CorrelationID,
+			ShortCode:     urlDTO.ShortCode,
+		})
+	}
+
+	return &entities, nil
 }
 
 func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {

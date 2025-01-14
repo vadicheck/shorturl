@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS urls
     url  VARCHAR(255) NOT NULL UNIQUE
     );
 CREATE INDEX IF NOT EXISTS idx_code ON urls (code);
+CREATE INDEX IF NOT EXISTS idx_url ON urls (url);
