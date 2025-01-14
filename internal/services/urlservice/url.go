@@ -28,14 +28,6 @@ type URLStorage interface {
 const defaultCodeLength = 10
 
 func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) {
-	mURL, err := s.storage.GetURLByURL(ctx, sourceURL)
-	if err != nil {
-		return "", err
-	}
-	if mURL.ID > 0 {
-		return mURL.Code, nil
-	}
-
 	code, err := s.generateCode(ctx)
 	if err != nil {
 		return "", err

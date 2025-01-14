@@ -10,14 +10,14 @@ import (
 	httpError "github.com/vadicheck/shorturl/internal/http/error"
 	"github.com/vadicheck/shorturl/internal/models/shorten"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
-	"github.com/vadicheck/shorturl/internal/validator"
+	reqValidator "github.com/vadicheck/shorturl/internal/validator"
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
 
 func New(
 	ctx context.Context,
 	service *urlservice.Service,
-	validator validator.CreateBatchURLValidator,
+	validator reqValidator.CreateBatchURLValidator,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		var request []shorten.CreateBatchURLRequest

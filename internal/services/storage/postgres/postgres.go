@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -64,7 +65,21 @@ func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) 
 	if err != nil {
 		var pgErr *pgconn.PgError
 
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			if pgErr.Code == pgerrcode.UniqueViolation {
+				mURL, err := s.GetURLByURL(ctx, url)
+				if err != nil {
+					return 0, err
+				}
+				if mURL.ID > 0 {
+					return 0, &storage.ExistsURLError{
+						OriginalURL: url,
+						ShortCode:   mURL.Code,
+						Err:         err,
+					}
+				}
+			}
+
 			return 0, fmt.Errorf("%s: %w", op, storage.ErrURLOrCodeExists)
 		}
 
