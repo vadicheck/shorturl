@@ -1,0 +1,6 @@
+version: '3.9'
+
+services:
+    database:
+        ports:
+            - ${POSTGRES_PORT:-5438}:5432

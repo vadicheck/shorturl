@@ -2,12 +2,16 @@ package save
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 
 	"github.com/vadicheck/shorturl/internal/config"
+	httpError "github.com/vadicheck/shorturl/internal/http/error"
+	"github.com/vadicheck/shorturl/internal/models/shorten"
+	"github.com/vadicheck/shorturl/internal/services/storage"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
 	"github.com/vadicheck/shorturl/pkg/validators/url"
 )
@@ -33,17 +37,27 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 			return
 		}
 
+		httpStatus := http.StatusCreated
+		response := shorten.CreateURLResponse{}
+
 		code, err := service.Create(ctx, reqURL)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Error saving the record: %s", err))
-			http.Error(res, "Failed to save the record", http.StatusInternalServerError)
-			return
+			var storageErr *storage.ExistsURLError
+
+			if errors.As(err, &storageErr) {
+				httpStatus = http.StatusConflict
+				response.Result = config.Config.BaseURL + "/" + storageErr.ShortCode
+			} else {
+				httpError.RespondWithError(res, http.StatusInternalServerError, "Failed to create")
+			}
+		} else {
+			response.Result = config.Config.BaseURL + "/" + code
 		}
 
 		res.Header().Set("Content-Type", "text/plain")
-		res.WriteHeader(http.StatusCreated)
+		res.WriteHeader(httpStatus)
 
-		_, err = res.Write([]byte(config.Config.BaseURL + "/" + code))
+		_, err = res.Write([]byte(response.Result))
 
 		if err != nil {
 			slog.Error(fmt.Sprintf("Error writing response: %s", err))

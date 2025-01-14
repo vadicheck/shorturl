@@ -2,25 +2,28 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"time"
 
-	"github.com/vadicheck/shorturl/internal/middleware/gzip"
-
-	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
-
 	"github.com/go-chi/chi/v5"
 
 	"github.com/vadicheck/shorturl/internal/config"
+	"github.com/vadicheck/shorturl/internal/handlers/url/batch"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
+	"github.com/vadicheck/shorturl/internal/handlers/url/ping"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
+	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
+	"github.com/vadicheck/shorturl/internal/middleware/gzip"
 	middlewarelogger "github.com/vadicheck/shorturl/internal/middleware/logger"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
-	"github.com/vadicheck/shorturl/internal/services/storage/sqlite"
+	"github.com/vadicheck/shorturl/internal/services/storage/postgres"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
+	"github.com/vadicheck/shorturl/internal/validator"
+	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
 
 type App struct {
@@ -28,7 +31,7 @@ type App struct {
 	serverAddress string
 }
 
-func (a *App) Run() error {
+func (a *App) Run() (*http.Server, error) {
 	server := &http.Server{
 		Addr:         config.Config.ServerAddress,
 		Handler:      a.router,
@@ -39,27 +42,27 @@ func (a *App) Run() error {
 
 	slog.Info(fmt.Sprintf("Server starting: %s", a.serverAddress))
 
-	err := server.ListenAndServe()
-	if err != nil {
-		slog.Error("Error starting server")
-		return err
-	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("error starting server", sl.Err(err))
+		}
+	}()
 
-	return nil
+	return server, nil
 }
 
-func New() *App {
+func New(ctx context.Context) *App {
 	config.ParseFlags()
 
 	var err error
 	var storage urlservice.URLStorage
 
-	if config.Config.StoragePath != "" {
-		storage, err = sqlite.New(config.Config.StoragePath)
+	if config.Config.DatabaseDsn != "" {
+		storage, err = postgres.New(config.Config.DatabaseDsn)
 		if err != nil {
 			log.Panic(err)
 		}
-		slog.Info("Storage: sqlite")
+		slog.Info("Storage: postgres")
 	} else {
 		storage, err = memory.New(config.Config.FileStoragePath)
 		if err != nil {
@@ -69,8 +72,7 @@ func New() *App {
 	}
 
 	urlService := urlservice.New(storage)
-
-	ctx := context.Background()
+	shortenValidator := validator.New()
 
 	r := chi.NewRouter()
 
@@ -78,8 +80,10 @@ func New() *App {
 	r.Use(middlewarelogger.New())
 
 	r.Get("/{id}", geturl.New(ctx, storage))
+	r.Get("/ping", ping.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
+	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
 
 	return &App{
 		router:        r,
