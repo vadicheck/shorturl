@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,23 +20,23 @@ func main() {
 
 	httpServer, err := httpApp.Run()
 	if err != nil {
-		panic(fmt.Errorf("http server can't start %w", err))
+		log.Panic(fmt.Errorf("http server can't start %w", err))
 	}
 
 	exit := make(chan os.Signal, 1)
 	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 
-	fmt.Println("app is ready")
+	slog.Info("app is ready")
 	select {
 	case v := <-exit:
-		fmt.Printf("signal.Notify: %v\n\n", v)
+		slog.Info(fmt.Sprintf("signal.Notify: %v\n\n", v))
 	case done := <-ctx.Done():
-		fmt.Println(fmt.Errorf("ctx.Done: %v", done))
+		slog.Info(fmt.Sprintf("ctx.Done: %v", done))
 	}
 
 	if err := httpServer.Shutdown(ctx); err != nil {
-		fmt.Println(err)
+		slog.Info(err.Error())
 	}
 
-	fmt.Println("Server Exited Properly")
+	slog.Info("Server Exited Properly")
 }

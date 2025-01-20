@@ -19,7 +19,12 @@ import (
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/repository"
 	"github.com/vadicheck/shorturl/internal/services/storage"
+	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
+
+const insertUsers = "INSERT INTO public.urls (code, url) VALUES ($1,$2) RETURNING id"
+const selectByCode = "SELECT id, code, url FROM urls WHERE code=$1"
+const selectByURL = "SELECT id, code, url FROM urls WHERE url=$1"
 
 type Storage struct {
 	db *sql.DB
@@ -53,7 +58,7 @@ func (s *Storage) PingContext(ctx context.Context) error {
 func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
 	const op = "storage.postgres.SaveURL"
 
-	stmt, err := s.db.Prepare("INSERT INTO public.urls (code, url) VALUES ($1,$2) RETURNING id")
+	stmt, err := s.db.Prepare(insertUsers)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
@@ -96,7 +101,12 @@ func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDt
 	if err != nil {
 		return nil, fmt.Errorf("can't begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			slog.Error("transaction rollback error", sl.Err(err))
+		}
+	}()
 
 	for _, urlDTO := range *dto {
 		_, err := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL)
@@ -132,13 +142,13 @@ func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDt
 }
 
 func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {
-	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE code=$1", code)
+	row := s.db.QueryRowContext(ctx, selectByCode, code)
 
 	return s.scan(row, "storage.postgres.GetURLByID")
 }
 
 func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, error) {
-	row := s.db.QueryRowContext(ctx, "SELECT id, code, url FROM urls WHERE url=$1", url)
+	row := s.db.QueryRowContext(ctx, selectByURL, url)
 
 	return s.scan(row, "storage.postgres.GetURLByURL")
 }

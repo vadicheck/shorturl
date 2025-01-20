@@ -44,11 +44,11 @@ func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) 
 
 func (s *Service) CreateBatch(
 	ctx context.Context,
-	request *[]shorten.CreateBatchURLRequest,
+	request []shorten.CreateBatchURLRequest,
 ) (*[]repository.BatchURL, error) {
 	dto := make([]repository.BatchURLDto, 0)
 
-	for _, r := range *request {
+	for _, r := range request {
 		code, err := s.generateCode(ctx)
 		if err != nil {
 			return nil, err

@@ -34,7 +34,7 @@ func New(
 			return
 		}
 
-		batchURL, err := service.CreateBatch(ctx, &request)
+		batchURL, err := service.CreateBatch(ctx, request)
 		if err != nil {
 			httpError.RespondWithError(res, http.StatusBadRequest, err.Error())
 			return
