@@ -51,13 +51,14 @@ func (s *Storage) PingContext(ctx context.Context) error {
 	return nil
 }
 
-func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) {
+func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64, error) {
 	id := int64(len(s.urls) + 1)
 
 	mURL := models.URL{
-		ID:   id,
-		Code: code,
-		URL:  url,
+		ID:     id,
+		Code:   code,
+		URL:    url,
+		UserID: userID,
 	}
 
 	s.urls[code] = mURL
@@ -70,11 +71,11 @@ func (s *Storage) SaveURL(ctx context.Context, code, url string) (int64, error) 
 	return id, nil
 }
 
-func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto) (*[]repository.BatchURL, error) {
+func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto, userID string) (*[]repository.BatchURL, error) {
 	entities := make([]repository.BatchURL, 0)
 
 	for _, urlDTO := range *dto {
-		_, err := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL)
+		_, err := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL, userID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to save URL: %w", err)
 		}
@@ -105,4 +106,16 @@ func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, erro
 	}
 
 	return models.URL{}, nil
+}
+
+func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error) {
+	var urls []models.URL
+
+	for _, u := range s.urls {
+		if u.UserID == userID {
+			urls = append(urls, u)
+		}
+	}
+
+	return &urls, nil
 }

@@ -19,21 +19,22 @@ func New(storage URLStorage) *Service {
 
 type URLStorage interface {
 	PingContext(ctx context.Context) error
-	SaveURL(ctx context.Context, code string, url string) (int64, error)
-	SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto) (*[]repository.BatchURL, error)
+	SaveURL(ctx context.Context, code string, url string, userID string) (int64, error)
+	SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto, userID string) (*[]repository.BatchURL, error)
 	GetURLByID(ctx context.Context, code string) (models.URL, error)
 	GetURLByURL(ctx context.Context, url string) (models.URL, error)
+	GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error)
 }
 
 const defaultCodeLength = 10
 
-func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) {
+func (s *Service) Create(ctx context.Context, sourceURL, userID string) (string, error) {
 	code, err := s.generateCode(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	_, err = s.storage.SaveURL(ctx, code, sourceURL)
+	_, err = s.storage.SaveURL(ctx, code, sourceURL, userID)
 
 	if err != nil {
 		return "", err
@@ -45,6 +46,7 @@ func (s *Service) Create(ctx context.Context, sourceURL string) (string, error) 
 func (s *Service) CreateBatch(
 	ctx context.Context,
 	request []shorten.CreateBatchURLRequest,
+	userID string,
 ) (*[]repository.BatchURL, error) {
 	dto := make([]repository.BatchURLDto, 0)
 
@@ -61,7 +63,7 @@ func (s *Service) CreateBatch(
 		})
 	}
 
-	batch, err := s.storage.SaveBatchURL(ctx, &dto)
+	batch, err := s.storage.SaveBatchURL(ctx, &dto, userID)
 	if err != nil {
 		return nil, err
 	}

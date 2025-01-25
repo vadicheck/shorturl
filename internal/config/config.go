@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"time"
 )
 
 var Config struct {
@@ -10,6 +11,8 @@ var Config struct {
 	BaseURL         string
 	DatabaseDsn     string
 	FileStoragePath string
+	JwtSecret       string
+	JwtTokenExpire  time.Duration
 }
 
 func ParseFlags() {
@@ -19,6 +22,8 @@ func ParseFlags() {
 	flag.StringVar(&Config.FileStoragePath, "f", "./storage/filestorage.txt", "path to file storage")
 
 	flag.Parse()
+
+	Config.JwtTokenExpire = time.Hour * 24
 
 	if serverAddress := os.Getenv("SERVER_ADDRESS"); serverAddress != "" {
 		Config.ServerAddress = serverAddress
@@ -34,5 +39,11 @@ func ParseFlags() {
 
 	if fileStoragePath := os.Getenv("FILE_STORAGE_PATH"); fileStoragePath != "" {
 		Config.FileStoragePath = fileStoragePath
+	}
+
+	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {
+		Config.JwtSecret = jwtSecret
+	} else {
+		Config.JwtSecret = "secretkey"
 	}
 }

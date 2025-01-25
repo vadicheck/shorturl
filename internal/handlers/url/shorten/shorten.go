@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/vadicheck/shorturl/internal/config"
+	"github.com/vadicheck/shorturl/internal/constants"
 	httpError "github.com/vadicheck/shorturl/internal/http/error"
 	"github.com/vadicheck/shorturl/internal/models/shorten"
 	"github.com/vadicheck/shorturl/internal/services/storage"
@@ -17,25 +18,27 @@ import (
 )
 
 func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var request shorten.CreateURLRequest
 
-		dec := json.NewDecoder(req.Body)
+		dec := json.NewDecoder(r.Body)
 		if err := dec.Decode(&request); err != nil {
-			httpError.RespondWithError(res, http.StatusInternalServerError, "Invalid JSON body")
+			httpError.RespondWithError(w, http.StatusInternalServerError, "Invalid JSON body")
 			return
 		}
 
 		_, err := url.IsValid(request.URL)
 		if err != nil {
-			httpError.RespondWithError(res, http.StatusBadRequest, "URL is invalid")
+			httpError.RespondWithError(w, http.StatusBadRequest, "URL is invalid")
 			return
 		}
 
 		httpStatus := http.StatusCreated
 		response := shorten.CreateURLResponse{}
 
-		code, err := service.Create(ctx, request.URL)
+		userID := r.Context().Value(constants.ContextUserID).(string)
+
+		code, err := service.Create(ctx, request.URL, userID)
 		if err != nil {
 			var storageErr *storage.ExistsURLError
 
@@ -43,18 +46,18 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 				httpStatus = http.StatusConflict
 				response.Result = config.Config.BaseURL + "/" + storageErr.ShortCode
 			} else {
-				httpError.RespondWithError(res, http.StatusInternalServerError, "Failed to create")
+				httpError.RespondWithError(w, http.StatusInternalServerError, "Failed to create")
 			}
 		} else {
 			response.Result = config.Config.BaseURL + "/" + code
 		}
 
-		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(httpStatus)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpStatus)
 
-		if err := json.NewEncoder(res).Encode(response); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			slog.Error("error encoding response", sl.Err(err))
-			httpError.RespondWithError(res, http.StatusInternalServerError, "Failed encoding response")
+			httpError.RespondWithError(w, http.StatusInternalServerError, "Failed encoding response")
 			return
 		}
 	}

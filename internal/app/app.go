@@ -17,7 +17,9 @@ import (
 	"github.com/vadicheck/shorturl/internal/handlers/url/ping"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
 	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
+	"github.com/vadicheck/shorturl/internal/handlers/url/urls"
 	"github.com/vadicheck/shorturl/internal/middleware/gzip"
+	"github.com/vadicheck/shorturl/internal/middleware/jwt"
 	middlewarelogger "github.com/vadicheck/shorturl/internal/middleware/logger"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
 	"github.com/vadicheck/shorturl/internal/services/storage/postgres"
@@ -76,11 +78,13 @@ func New(ctx context.Context) *App {
 
 	r := chi.NewRouter()
 
+	r.Use(jwt.New())
 	r.Use(gzip.New())
 	r.Use(middlewarelogger.New())
 
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Get("/ping", ping.New(ctx, storage))
+	r.Get("/api/user/urls", urls.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
 	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
