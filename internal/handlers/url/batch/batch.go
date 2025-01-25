@@ -1,24 +1,26 @@
-package shorten
+package batch
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/vadicheck/shorturl/internal/config"
 	httpError "github.com/vadicheck/shorturl/internal/http/error"
 	"github.com/vadicheck/shorturl/internal/models/shorten"
-	"github.com/vadicheck/shorturl/internal/services/storage"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
+	reqValidator "github.com/vadicheck/shorturl/internal/validator"
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
-	"github.com/vadicheck/shorturl/pkg/validators/url"
 )
 
-func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
+func New(
+	ctx context.Context,
+	service *urlservice.Service,
+	validator reqValidator.CreateBatchURLValidator,
+) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		var request shorten.CreateURLRequest
+		var request []shorten.CreateBatchURLRequest
 
 		dec := json.NewDecoder(req.Body)
 		if err := dec.Decode(&request); err != nil {
@@ -26,31 +28,29 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 			return
 		}
 
-		_, err := url.IsValid(request.URL)
-		if err != nil {
-			httpError.RespondWithError(res, http.StatusBadRequest, "URL is invalid")
+		errs := validator.CreateBatchShortURL(&request)
+		if len(errs.Errors) != 0 {
+			httpError.RespondWithError(res, http.StatusBadRequest, errs.Error())
 			return
 		}
 
-		httpStatus := http.StatusCreated
-		response := shorten.CreateURLResponse{}
-
-		code, err := service.Create(ctx, request.URL)
+		batchURL, err := service.CreateBatch(ctx, request)
 		if err != nil {
-			var storageErr *storage.ExistsURLError
+			httpError.RespondWithError(res, http.StatusBadRequest, err.Error())
+			return
+		}
 
-			if errors.As(err, &storageErr) {
-				httpStatus = http.StatusConflict
-				response.Result = config.Config.BaseURL + "/" + storageErr.ShortCode
-			} else {
-				httpError.RespondWithError(res, http.StatusInternalServerError, "Failed to create")
-			}
-		} else {
-			response.Result = config.Config.BaseURL + "/" + code
+		response := make([]shorten.CreateBatchURLResponse, 0)
+
+		for _, url := range *batchURL {
+			response = append(response, shorten.CreateBatchURLResponse{
+				CorrelationID: url.CorrelationID,
+				ShortURL:      config.Config.BaseURL + "/" + url.ShortCode,
+			})
 		}
 
 		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(httpStatus)
+		res.WriteHeader(http.StatusCreated)
 
 		if err := json.NewEncoder(res).Encode(response); err != nil {
 			slog.Error("error encoding response", sl.Err(err))
