@@ -13,6 +13,7 @@ import (
 
 	"github.com/vadicheck/shorturl/internal/config"
 	"github.com/vadicheck/shorturl/internal/handlers/url/batch"
+	deleteurl "github.com/vadicheck/shorturl/internal/handlers/url/delete"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
 	"github.com/vadicheck/shorturl/internal/handlers/url/ping"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
@@ -88,6 +89,7 @@ func New(ctx context.Context) *App {
 	r.Post("/", saveurl.New(ctx, urlService))
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
 	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
+	r.Delete("/api/user/urls", deleteurl.New(ctx, urlService, shortenValidator))
 
 	return &App{
 		router:        r,

@@ -24,6 +24,7 @@ type URLStorage interface {
 	GetURLByID(ctx context.Context, code string) (models.URL, error)
 	GetURLByURL(ctx context.Context, url string) (models.URL, error)
 	GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error)
+	DeleteShortURLs(ctx context.Context, urls []string, userID string) error
 }
 
 const defaultCodeLength = 10
@@ -69,6 +70,10 @@ func (s *Service) CreateBatch(
 	}
 
 	return batch, nil
+}
+
+func (s *Service) Delete(ctx context.Context, urls []string, userID string) error {
+	return s.storage.DeleteShortURLs(ctx, urls, userID)
 }
 
 func (s *Service) generateCode(ctx context.Context) (string, error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -21,11 +22,6 @@ import (
 	"github.com/vadicheck/shorturl/internal/services/storage"
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
-
-const insertUsers = "INSERT INTO public.urls (code, url, user_id) VALUES ($1,$2, $3) RETURNING id"
-const selectByCode = "SELECT id, code, url, user_id FROM urls WHERE code=$1"
-const selectByURL = "SELECT id, code, url, user_id FROM urls WHERE url=$1"
-const selectByUserID = "SELECT id, code, url, user_id FROM urls WHERE user_id=$1"
 
 type Storage struct {
 	db *sql.DB
@@ -58,8 +54,9 @@ func (s *Storage) PingContext(ctx context.Context) error {
 
 func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64, error) {
 	const op = "storage.postgres.SaveURL"
+	const insertURL = "INSERT INTO public.urls (code, url, user_id) VALUES ($1,$2, $3) RETURNING id"
 
-	stmt, err := s.db.Prepare(insertUsers)
+	stmt, err := s.db.Prepare(insertURL)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
@@ -143,19 +140,24 @@ func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDt
 }
 
 func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {
+	const selectByCode = "SELECT id, code, url, user_id, is_deleted FROM urls WHERE code=$1"
+
 	row := s.db.QueryRowContext(ctx, selectByCode, code)
 
 	return s.scan(row, "storage.postgres.GetURLByID")
 }
 
 func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, error) {
+	const selectByURL = "SELECT id, code, url, user_id, is_deleted FROM urls WHERE url=$1"
+
 	row := s.db.QueryRowContext(ctx, selectByURL, url)
 
 	return s.scan(row, "storage.postgres.GetURLByURL")
 }
 
 func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error) {
-	op := "storage.postgres.GetUserURLs"
+	const op = "storage.postgres.GetUserURLs"
+	const selectByUserID = "SELECT id, code, url, user_id, is_deleted FROM urls WHERE user_id=$1"
 
 	rows, err := s.db.QueryContext(ctx, selectByUserID, userID)
 	if err != nil {
@@ -172,7 +174,7 @@ func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL
 
 	for rows.Next() {
 		var url models.URL
-		if err := rows.Scan(&url.ID, &url.Code, &url.URL, &url.UserID); err != nil {
+		if err := rows.Scan(&url.ID, &url.Code, &url.URL, &url.UserID, &url.IsDeleted); err != nil {
 			return nil, fmt.Errorf("failed to scan row[%s]: %w", op, err)
 		}
 		urls = append(urls, url)
@@ -185,9 +187,31 @@ func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL
 	return &urls, nil
 }
 
+func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID string) error {
+	const op = "storage.postgres.DeleteShortURLs"
+	const deleteURLs = "UPDATE public.urls SET is_deleted = true WHERE user_id = $1 AND code = ANY($2)"
+
+	stmt, err := s.db.Prepare(deleteURLs)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			slog.Error("prepare sql error", sl.Err(err))
+		}
+	}()
+
+	_, err = stmt.ExecContext(ctx, userID, pq.Array(urls))
+	if err != nil {
+		return fmt.Errorf("can't execute DeleteShortURLs %s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (s *Storage) scan(row *sql.Row, op string) (models.URL, error) {
 	var modelURL models.URL
-	err := row.Scan(&modelURL.ID, &modelURL.Code, &modelURL.URL, &modelURL.UserID)
+	err := row.Scan(&modelURL.ID, &modelURL.Code, &modelURL.URL, &modelURL.UserID, &modelURL.IsDeleted)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.URL{}, nil

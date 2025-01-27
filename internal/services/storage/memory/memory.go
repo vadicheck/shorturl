@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/repository"
@@ -118,4 +119,14 @@ func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL
 	}
 
 	return &urls, nil
+}
+
+func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID string) error {
+	for code, url := range s.urls {
+		if url.UserID == userID && slices.Contains(urls, url.Code) {
+			url.IsDeleted = true
+			s.urls[code] = url
+		}
+	}
+	return nil
 }
