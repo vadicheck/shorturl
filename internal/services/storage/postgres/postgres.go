@@ -155,7 +155,7 @@ func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, erro
 	return s.scan(row, "storage.postgres.GetURLByURL")
 }
 
-func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error) {
+func (s *Storage) GetUserURLs(ctx context.Context, userID string) ([]models.URL, error) {
 	const op = "storage.postgres.GetUserURLs"
 	const selectByUserID = "SELECT id, code, url, user_id, is_deleted FROM urls WHERE user_id=$1"
 
@@ -184,7 +184,7 @@ func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL
 		return nil, fmt.Errorf("error encountered during rows iteration [%s]: %w", op, err)
 	}
 
-	return &urls, nil
+	return urls, nil
 }
 
 func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID string) error {

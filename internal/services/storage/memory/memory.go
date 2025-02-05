@@ -109,7 +109,7 @@ func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, erro
 	return models.URL{}, nil
 }
 
-func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error) {
+func (s *Storage) GetUserURLs(ctx context.Context, userID string) ([]models.URL, error) {
 	var urls []models.URL
 
 	for _, u := range s.urls {
@@ -118,7 +118,7 @@ func (s *Storage) GetUserURLs(ctx context.Context, userID string) (*[]models.URL
 		}
 	}
 
-	return &urls, nil
+	return urls, nil
 }
 
 func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID string) error {

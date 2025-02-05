@@ -16,7 +16,7 @@ import (
 )
 
 type URLStorage interface {
-	GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error)
+	GetUserURLs(ctx context.Context, userID string) ([]models.URL, error)
 }
 
 func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
@@ -40,7 +40,7 @@ func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 			return
 		}
 
-		if len(*mURLs) == 0 {
+		if len(mURLs) == 0 {
 			slog.Info(fmt.Sprintf("No URLs found for userID: %s", userID))
 			http.Error(w, "No URLs found", http.StatusNoContent)
 			return
@@ -48,7 +48,7 @@ func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 
 		response := make([]shorten.UserURLResponse, 0)
 
-		for _, url := range *mURLs {
+		for _, url := range mURLs {
 			response = append(response, shorten.UserURLResponse{
 				ShortURL:    config.Config.BaseURL + "/" + url.Code,
 				OriginalURL: url.URL,

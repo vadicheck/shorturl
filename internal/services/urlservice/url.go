@@ -23,7 +23,7 @@ type URLStorage interface {
 	SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto, userID string) (*[]repository.BatchURL, error)
 	GetURLByID(ctx context.Context, code string) (models.URL, error)
 	GetURLByURL(ctx context.Context, url string) (models.URL, error)
-	GetUserURLs(ctx context.Context, userID string) (*[]models.URL, error)
+	GetUserURLs(ctx context.Context, userID string) ([]models.URL, error)
 	DeleteShortURLs(ctx context.Context, urls []string, userID string) error
 }
 

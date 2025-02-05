@@ -35,7 +35,11 @@ func New(
 
 		userID := r.Context().Value(constants.ContextUserID).(string)
 
+		closeCh := make(chan string)
+
 		go func() {
+			defer close(closeCh)
+
 			if err := service.Delete(ctx, request, userID); err != nil {
 				slog.Error("failed to delete URLs", sl.Err(err))
 			}
@@ -47,6 +51,12 @@ func New(
 		if err := json.NewEncoder(w).Encode(nil); err != nil {
 			slog.Error("error encoding response", sl.Err(err))
 			httpError.RespondWithError(w, http.StatusInternalServerError, "Failed encoding response")
+			return
+		}
+
+		select {
+		case <-closeCh:
+		case <-ctx.Done():
 			return
 		}
 	}
