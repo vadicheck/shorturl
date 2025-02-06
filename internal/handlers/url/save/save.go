@@ -42,6 +42,8 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 		httpStatus := http.StatusCreated
 		response := shorten.CreateURLResponse{}
 
+		slog.Info(fmt.Sprintf("userID requested (save.go): %s", r.Header.Get(string(constants.XUserID))))
+
 		code, err := service.Create(ctx, reqURL, r.Header.Get(string(constants.XUserID)))
 		if err != nil {
 			var storageErr *storage.ExistsURLError

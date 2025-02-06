@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -35,6 +36,8 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 
 		httpStatus := http.StatusCreated
 		response := shorten.CreateURLResponse{}
+
+		slog.Info(fmt.Sprintf("userID requested (save.go): %s", r.Header.Get(string(constants.XUserID))))
 
 		code, err := service.Create(ctx, request.URL, r.Header.Get(string(constants.XUserID)))
 		if err != nil {
