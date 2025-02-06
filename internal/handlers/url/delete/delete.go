@@ -33,14 +33,12 @@ func New(
 			return
 		}
 
-		userID := r.Context().Value(constants.ContextUserID).(string)
-
 		closeCh := make(chan string)
 
 		go func() {
 			defer close(closeCh)
 
-			if err := service.Delete(ctx, request, userID); err != nil {
+			if err := service.Delete(ctx, request, r.Header.Get(string(constants.XUserID))); err != nil {
 				slog.Error("failed to delete URLs", sl.Err(err))
 			}
 		}()

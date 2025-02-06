@@ -21,7 +21,7 @@ type URLStorage interface {
 
 func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID := r.Context().Value(constants.ContextUserID).(string)
+		userID := r.Header.Get(string(constants.XUserID))
 
 		if userID == "" {
 			slog.Error("userID is empty")

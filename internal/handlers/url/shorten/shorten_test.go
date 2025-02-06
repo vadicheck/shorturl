@@ -112,9 +112,9 @@ func TestNew(t *testing.T) {
 			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
 
-			newCtx := context.WithValue(ctx, constants.ContextUserID, uuid.New().String())
+			req.Header.Set(string(constants.XUserID), uuid.New().String())
 
-			New(ctx, urlservice.New(storage))(w, req.WithContext(newCtx))
+			New(ctx, urlservice.New(storage))(w, req)
 
 			result := w.Result()
 			defer result.Body.Close()

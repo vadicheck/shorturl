@@ -1,7 +1,6 @@
 package cookie
 
 import (
-	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -17,8 +16,6 @@ import (
 type user struct {
 	UserID string `json:"user_id"`
 }
-
-const userUrls = "/api/user/urls"
 
 func New() func(next http.Handler) http.Handler {
 	slog.Info("cookie middleware enabled")
@@ -61,8 +58,8 @@ func New() func(next http.Handler) http.Handler {
 				}
 				http.SetCookie(w, cookie)
 
-				newCtx := context.WithValue(r.Context(), constants.ContextUserID, user.UserID)
-				next.ServeHTTP(w, r.WithContext(newCtx))
+				r.Header.Set(string(constants.XUserID), user.UserID)
+				next.ServeHTTP(w, r)
 				return
 			}
 
@@ -79,8 +76,8 @@ func New() func(next http.Handler) http.Handler {
 				return
 			}
 
-			newCtx := context.WithValue(r.Context(), constants.ContextUserID, u.UserID)
-			next.ServeHTTP(w, r.WithContext(newCtx))
+			r.Header.Set(string(constants.XUserID), u.UserID)
+			next.ServeHTTP(w, r)
 		}
 
 		return http.HandlerFunc(fn)

@@ -36,9 +36,7 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 		httpStatus := http.StatusCreated
 		response := shorten.CreateURLResponse{}
 
-		userID := r.Context().Value(constants.ContextUserID).(string)
-
-		code, err := service.Create(ctx, request.URL, userID)
+		code, err := service.Create(ctx, request.URL, r.Header.Get(string(constants.XUserID)))
 		if err != nil {
 			var storageErr *storage.ExistsURLError
 

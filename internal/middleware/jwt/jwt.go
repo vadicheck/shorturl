@@ -1,7 +1,6 @@
 package jwt
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -61,8 +60,8 @@ func New() func(next http.Handler) http.Handler {
 
 				http.SetCookie(w, cookie)
 
-				newCtx := context.WithValue(r.Context(), constants.ContextUserID, userID)
-				next.ServeHTTP(w, r.WithContext(newCtx))
+				r.Header.Set(string(constants.XUserID), userID)
+				next.ServeHTTP(w, r)
 				return
 			}
 
@@ -81,8 +80,8 @@ func New() func(next http.Handler) http.Handler {
 				return
 			}
 
-			newCtx := context.WithValue(r.Context(), constants.ContextUserID, decodedJwtToken.UserID)
-			next.ServeHTTP(w, r.WithContext(newCtx))
+			r.Header.Set(string(constants.XUserID), decodedJwtToken.UserID)
+			next.ServeHTTP(w, r)
 		}
 
 		return http.HandlerFunc(fn)

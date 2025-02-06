@@ -1,5 +1,5 @@
 package constants
 
-type contextKey string
+type headerKey string
 
-const ContextUserID contextKey = "contextUserID"
+const XUserID headerKey = "X-User-ID"

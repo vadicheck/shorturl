@@ -35,9 +35,7 @@ func New(
 			return
 		}
 
-		userID := r.Context().Value(constants.ContextUserID).(string)
-
-		batchURL, err := service.CreateBatch(ctx, request, userID)
+		batchURL, err := service.CreateBatch(ctx, request, r.Header.Get(string(constants.XUserID)))
 		if err != nil {
 			httpError.RespondWithError(w, http.StatusBadRequest, err.Error())
 			return
