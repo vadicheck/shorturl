@@ -17,6 +17,8 @@ type user struct {
 	UserID string `json:"user_id"`
 }
 
+const userUrls = "/api/user/urls"
+
 func New() func(next http.Handler) http.Handler {
 	slog.Info("cookie middleware enabled")
 
@@ -33,6 +35,11 @@ func New() func(next http.Handler) http.Handler {
 			if err != nil && !errors.Is(err, http.ErrNoCookie) {
 				slog.Error("\"user\" cookie not found")
 				httpError.RespondWithError(w, http.StatusInternalServerError, "Auth error")
+				return
+			}
+
+			if userUrls == r.URL.String() && (userCookie == nil || errors.Is(err, http.ErrNoCookie)) {
+				httpError.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 				return
 			}
 
