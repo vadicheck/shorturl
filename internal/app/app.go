@@ -7,9 +7,11 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/vadicheck/shorturl/internal/config"
 	"github.com/vadicheck/shorturl/internal/handlers/url/batch"
@@ -90,6 +92,8 @@ func New(ctx context.Context) *App {
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
 	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
 	r.Delete("/api/user/urls", deleteurl.New(ctx, urlService, shortenValidator))
+
+	r.Mount("/debug", middleware.Profiler())
 
 	return &App{
 		router:        r,

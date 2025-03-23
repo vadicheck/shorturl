@@ -78,6 +78,23 @@ func TestNew(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "url delete",
+			code: "delete",
+			want: want{
+				contentType: "text/plain",
+				statusCode:  http.StatusGone,
+				response:    "",
+			},
+			urls: map[string]models.URL{
+				"delete": {
+					ID:     1,
+					Code:   "code",
+					URL:    "https://practicum.yandex.ru/",
+					UserID: uuid.New().String(),
+				},
+			},
+		},
 	}
 
 	ctx := context.Background()
@@ -99,6 +116,11 @@ func TestNew(t *testing.T) {
 			for code, url := range tt.urls {
 				_, err = storage.SaveURL(ctx, code, url.URL, url.UserID)
 				require.NoError(t, err)
+
+				if tt.code == "delete" {
+					err = storage.DeleteShortURLs(ctx, []string{code}, url.UserID)
+					require.NoError(t, err)
+				}
 			}
 
 			req.SetPathValue("id", tt.code)

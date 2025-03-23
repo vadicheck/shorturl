@@ -11,6 +11,12 @@ tasks:
     cmds:
       - go run ./cmd/shortener --storage-path=./storage/database.db
 
+  test-cover:
+    desc: "Run tests with coverage"
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out
+
   test:
     desc: "Run tests"
     cmds:

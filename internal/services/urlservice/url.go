@@ -77,10 +77,7 @@ func (s *Service) Delete(ctx context.Context, urls []string, userID string) erro
 }
 
 func (s *Service) generateCode(ctx context.Context) (string, error) {
-	var code string
-	isUnique := false
-
-	for !isUnique {
+	for {
 		code, err := random.GenerateRandomString(defaultCodeLength)
 		if err != nil {
 			return "", err
@@ -90,10 +87,9 @@ func (s *Service) generateCode(ctx context.Context) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		if mURL.ID == 0 {
 			return code, nil
 		}
 	}
-
-	return code, nil
 }
