@@ -6,9 +6,17 @@ import (
 	"github.com/gobuffalo/validate"
 )
 
-type validator struct{}
+type Validator struct{}
 
-func (v *validator) CreateBatchShortURL(data *[]shorten.CreateBatchURLRequest) *validate.Errors {
+type CreateBatchURLValidator interface {
+	CreateBatchShortURL(request *[]shorten.CreateBatchURLRequest) *validate.Errors
+}
+
+type DeleteURLsValidator interface {
+	DeleteShortURLs(request *[]string) *validate.Errors
+}
+
+func (v *Validator) CreateBatchShortURL(data *[]shorten.CreateBatchURLRequest) *validate.Errors {
 	var checks []validate.Validator
 
 	checks = append(checks, &ArrayNotEmpty[shorten.CreateBatchURLRequest]{
@@ -21,10 +29,19 @@ func (v *validator) CreateBatchShortURL(data *[]shorten.CreateBatchURLRequest) *
 	return errors
 }
 
-type CreateBatchURLValidator interface {
-	CreateBatchShortURL(request *[]shorten.CreateBatchURLRequest) *validate.Errors
+func (v *Validator) DeleteShortURLs(data *[]string) *validate.Errors {
+	var checks []validate.Validator
+
+	checks = append(checks, &ArrayNotEmpty[string]{
+		Name:  "Data",
+		Array: *data,
+	})
+
+	errors := validate.Validate(checks...)
+
+	return errors
 }
 
-func New() CreateBatchURLValidator {
-	return &validator{}
+func New() *Validator {
+	return &Validator{}
 }

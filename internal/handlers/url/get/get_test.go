@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -36,9 +37,10 @@ func TestNew(t *testing.T) {
 			},
 			urls: map[string]models.URL{
 				"code": {
-					ID:   1,
-					Code: "code",
-					URL:  "https://practicum.yandex.ru/",
+					ID:     1,
+					Code:   "code",
+					URL:    "https://practicum.yandex.ru/",
+					UserID: uuid.New().String(),
 				},
 			},
 		},
@@ -52,9 +54,10 @@ func TestNew(t *testing.T) {
 			},
 			urls: map[string]models.URL{
 				"code": {
-					ID:   1,
-					Code: "code",
-					URL:  "https://practicum.yandex.ru/",
+					ID:     1,
+					Code:   "code",
+					URL:    "https://practicum.yandex.ru/",
+					UserID: uuid.New().String(),
 				},
 			},
 		},
@@ -68,9 +71,10 @@ func TestNew(t *testing.T) {
 			},
 			urls: map[string]models.URL{
 				"code": {
-					ID:   1,
-					Code: "code",
-					URL:  "https://practicum.yandex.ru/",
+					ID:     1,
+					Code:   "code",
+					URL:    "https://practicum.yandex.ru/",
+					UserID: uuid.New().String(),
 				},
 			},
 		},
@@ -93,7 +97,7 @@ func TestNew(t *testing.T) {
 			require.NoError(t, err)
 
 			for code, url := range tt.urls {
-				_, err = storage.SaveURL(ctx, code, url.URL)
+				_, err = storage.SaveURL(ctx, code, url.URL, url.UserID)
 				require.NoError(t, err)
 			}
 

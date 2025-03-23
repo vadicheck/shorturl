@@ -44,6 +44,11 @@ func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.Header().Set("Location", mURL.URL)
-		res.WriteHeader(http.StatusTemporaryRedirect)
+
+		if mURL.IsDeleted {
+			res.WriteHeader(http.StatusGone)
+		} else {
+			res.WriteHeader(http.StatusTemporaryRedirect)
+		}
 	}
 }

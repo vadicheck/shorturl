@@ -3,13 +3,19 @@ package config
 import (
 	"flag"
 	"os"
+	"time"
 )
 
 var Config struct {
-	ServerAddress   string
-	BaseURL         string
-	DatabaseDsn     string
-	FileStoragePath string
+	ServerAddress        string
+	BaseURL              string
+	DatabaseDsn          string
+	FileStoragePath      string
+	JwtSecret            string
+	JwtTokenExpire       time.Duration
+	SecureCookieHashKey  string
+	SecureCookieBlockKey string
+	SecureCookieExpire   time.Duration
 }
 
 func ParseFlags() {
@@ -19,6 +25,9 @@ func ParseFlags() {
 	flag.StringVar(&Config.FileStoragePath, "f", "./storage/filestorage.txt", "path to file storage")
 
 	flag.Parse()
+
+	Config.JwtTokenExpire = time.Hour * 24
+	Config.SecureCookieExpire = time.Hour * 24
 
 	if serverAddress := os.Getenv("SERVER_ADDRESS"); serverAddress != "" {
 		Config.ServerAddress = serverAddress
@@ -34,5 +43,23 @@ func ParseFlags() {
 
 	if fileStoragePath := os.Getenv("FILE_STORAGE_PATH"); fileStoragePath != "" {
 		Config.FileStoragePath = fileStoragePath
+	}
+
+	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {
+		Config.JwtSecret = jwtSecret
+	} else {
+		Config.JwtSecret = "secretkey"
+	}
+
+	if secureCookieHashKey := os.Getenv("SECURE_COOKIE_HASH_KEY"); secureCookieHashKey != "" {
+		Config.SecureCookieHashKey = secureCookieHashKey
+	} else {
+		Config.SecureCookieHashKey = "very-secret"
+	}
+
+	if secureCookieBlockKey := os.Getenv("SECURE_COOKIE_BLOCK_KEY"); secureCookieBlockKey != "" {
+		Config.SecureCookieBlockKey = secureCookieBlockKey
+	} else {
+		Config.SecureCookieBlockKey = "alotsecretalotsecretalotsecretgr"
 	}
 }

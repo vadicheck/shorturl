@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/vadicheck/shorturl/internal/constants"
+
 	"github.com/vadicheck/shorturl/internal/config"
 	httpError "github.com/vadicheck/shorturl/internal/http/error"
 	"github.com/vadicheck/shorturl/internal/models/shorten"
@@ -17,14 +19,14 @@ import (
 )
 
 func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		body, err := io.ReadAll(req.Body)
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Error reading body: %s", err))
-			http.Error(res, "Failed to read request body", http.StatusInternalServerError)
+			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 			return
 		}
-		defer req.Body.Close()
+		defer r.Body.Close()
 
 		slog.Info(fmt.Sprintf("Received request body: %s", body))
 
@@ -33,14 +35,16 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 		_, err = url.IsValid(reqURL)
 		if err != nil {
 			slog.Error(fmt.Sprintf("URL is invalid: %s", err))
-			http.Error(res, "URL is invalid", http.StatusBadRequest)
+			http.Error(w, "URL is invalid", http.StatusBadRequest)
 			return
 		}
 
 		httpStatus := http.StatusCreated
 		response := shorten.CreateURLResponse{}
 
-		code, err := service.Create(ctx, reqURL)
+		slog.Info(fmt.Sprintf("userID requested (save.go): %s", r.Header.Get(string(constants.XUserID))))
+
+		code, err := service.Create(ctx, reqURL, r.Header.Get(string(constants.XUserID)))
 		if err != nil {
 			var storageErr *storage.ExistsURLError
 
@@ -48,16 +52,16 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 				httpStatus = http.StatusConflict
 				response.Result = config.Config.BaseURL + "/" + storageErr.ShortCode
 			} else {
-				httpError.RespondWithError(res, http.StatusInternalServerError, "Failed to create")
+				httpError.RespondWithError(w, http.StatusInternalServerError, "Failed to create")
 			}
 		} else {
 			response.Result = config.Config.BaseURL + "/" + code
 		}
 
-		res.Header().Set("Content-Type", "text/plain")
-		res.WriteHeader(httpStatus)
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(httpStatus)
 
-		_, err = res.Write([]byte(response.Result))
+		_, err = w.Write([]byte(response.Result))
 
 		if err != nil {
 			slog.Error(fmt.Sprintf("Error writing response: %s", err))

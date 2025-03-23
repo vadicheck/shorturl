@@ -9,10 +9,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/vadicheck/shorturl/internal/config"
+	"github.com/vadicheck/shorturl/internal/constants"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
 )
@@ -84,6 +86,8 @@ func TestNew(t *testing.T) {
 
 			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
+
+			req.Header.Set(string(constants.XUserID), uuid.New().String())
 
 			New(ctx, urlservice.New(storage))(w, req)
 

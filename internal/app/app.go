@@ -13,10 +13,13 @@ import (
 
 	"github.com/vadicheck/shorturl/internal/config"
 	"github.com/vadicheck/shorturl/internal/handlers/url/batch"
+	deleteurl "github.com/vadicheck/shorturl/internal/handlers/url/delete"
 	geturl "github.com/vadicheck/shorturl/internal/handlers/url/get"
 	"github.com/vadicheck/shorturl/internal/handlers/url/ping"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
 	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
+	"github.com/vadicheck/shorturl/internal/handlers/url/urls"
+	mwcookie "github.com/vadicheck/shorturl/internal/middleware/cookie"
 	"github.com/vadicheck/shorturl/internal/middleware/gzip"
 	middlewarelogger "github.com/vadicheck/shorturl/internal/middleware/logger"
 	"github.com/vadicheck/shorturl/internal/services/storage/memory"
@@ -77,13 +80,16 @@ func New(ctx context.Context) *App {
 	r := chi.NewRouter()
 
 	r.Use(gzip.New())
+	r.Use(mwcookie.New())
 	r.Use(middlewarelogger.New())
 
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Get("/ping", ping.New(ctx, storage))
+	r.Get("/api/user/urls", urls.New(ctx, storage))
 	r.Post("/", saveurl.New(ctx, urlService))
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
 	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
+	r.Delete("/api/user/urls", deleteurl.New(ctx, urlService, shortenValidator))
 
 	return &App{
 		router:        r,
