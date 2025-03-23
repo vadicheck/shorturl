@@ -135,7 +135,6 @@ func TestNew(t *testing.T) {
 			dec := json.NewDecoder(result.Body)
 
 			err = dec.Decode(&res)
-			fmt.Println(err)
 			assert.NoError(t, err)
 
 			if tt.want.statusCode == http.StatusCreated {

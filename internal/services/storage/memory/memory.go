@@ -8,6 +8,7 @@ import (
 
 	"github.com/vadicheck/shorturl/internal/models"
 	"github.com/vadicheck/shorturl/internal/repository"
+	"github.com/vadicheck/shorturl/internal/services/storage"
 )
 
 type Storage struct {
@@ -54,6 +55,16 @@ func (s *Storage) PingContext(ctx context.Context) error {
 
 func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64, error) {
 	id := int64(len(s.urls) + 1)
+
+	for _, u := range s.urls {
+		if u.URL == url {
+			return 0, &storage.ExistsURLError{
+				OriginalURL: url,
+				ShortCode:   code,
+				Err:         nil,
+			}
+		}
+	}
 
 	mURL := models.URL{
 		ID:     id,
