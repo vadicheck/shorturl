@@ -1,3 +1,6 @@
+// Package gzip provides middleware for handling gzip compression and decompression.
+// It checks the `Accept-Encoding` and `Content-Encoding` headers to decide whether to compress the
+// response body or decompress the request body, respectively.
 package gzip
 
 import (
@@ -9,6 +12,21 @@ import (
 	"github.com/vadicheck/shorturl/pkg/compress"
 )
 
+// New returns a middleware function that handles gzip compression and decompression.
+//
+// The middleware inspects the `Accept-Encoding` header of the incoming request. If it contains "gzip",
+// and the `Content-Type` of the request is compressible, the response body will be compressed with gzip.
+//
+// It also inspects the `Content-Encoding` header of the incoming request. If it indicates that the request
+// body is compressed (i.e., contains "gzip"), it will decompress the body before passing it to the next handler.
+//
+// The middleware works with content types that are compressible, such as `application/json` and `text/html`.
+//
+// Parameters:
+//   - None (this is a middleware factory function)
+//
+// Returns:
+//   - A middleware function that can be used with `http.Handle` or other HTTP routers.
 func New() func(next http.Handler) http.Handler {
 	slog.Info("gzip middleware enabled")
 

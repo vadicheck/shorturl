@@ -1,3 +1,6 @@
+// Package memory provides an in-memory storage solution for managing URL data.
+// It implements the Storage interface for saving, retrieving, and deleting URLs,
+// with functionality for batch processing and user-specific URL management.
 package memory
 
 import (
@@ -11,12 +14,23 @@ import (
 	"github.com/vadicheck/shorturl/internal/services/storage"
 )
 
+// Storage is an in-memory implementation of a URL storage system.
+// It supports saving, retrieving, and deleting individual and batch URLs.
+// The storage is backed by file-based producers and consumers.
 type Storage struct {
+	// producer is responsible for writing URL data to the storage.
 	producer *Producer
+
+	// consumer is responsible for reading and loading URL data from storage.
 	consumer *Consumer
-	urls     map[string]models.URL
+
+	// urls is a map of stored URLs, keyed by their unique code.
+	urls map[string]models.URL
 }
 
+// New creates and initializes a new in-memory URL storage instance.
+// It opens files for both reading and writing URL data and creates the producer and consumer.
+// It returns a pointer to the Storage instance and any error encountered during initialization.
 func New(fileName string) (*Storage, error) {
 	pFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, permission)
 	if err != nil {
@@ -49,13 +63,19 @@ func New(fileName string) (*Storage, error) {
 	}, nil
 }
 
+// PingContext is a no-op method for compatibility with the storage interface.
+// It returns nil, indicating that the storage is available.
 func (s *Storage) PingContext(ctx context.Context) error {
 	return nil
 }
 
+// SaveURL saves a new URL to the storage system.
+// It checks for duplicates and returns an error if the URL already exists.
+// It returns the ID of the newly saved URL and any error encountered during the process.
 func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64, error) {
 	id := int64(len(s.urls) + 1)
 
+	// Check if the URL already exists
 	for _, u := range s.urls {
 		if u.URL == url {
 			return 0, &storage.ExistsURLError{
@@ -73,8 +93,10 @@ func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64,
 		UserID: userID,
 	}
 
+	// Add the new URL to the map
 	s.urls[code] = mURL
 
+	// Write the URL data using the producer
 	err := s.producer.WriteURL(&mURL)
 	if err != nil {
 		return 0, err
@@ -83,6 +105,9 @@ func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64,
 	return id, nil
 }
 
+// SaveBatchURL saves a batch of URLs to the storage system.
+// It accepts a slice of BatchURLDto objects and saves each URL individually.
+// It returns a slice of BatchURL objects containing the correlation ID and short code of each URL.
 func (s *Storage) SaveBatchURL(
 	ctx context.Context,
 	dto *[]repository.BatchURLDto,
@@ -90,6 +115,7 @@ func (s *Storage) SaveBatchURL(
 ) (*[]repository.BatchURL, error) {
 	entities := make([]repository.BatchURL, 0)
 
+	// Save each URL in the batch
 	for _, urlDTO := range *dto {
 		_, err := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL, userID)
 		if err != nil {
@@ -105,6 +131,8 @@ func (s *Storage) SaveBatchURL(
 	return &entities, nil
 }
 
+// GetURLByID retrieves a URL from the storage by its short code.
+// It returns the URL if found, or an empty URL struct if not.
 func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, error) {
 	url, ok := s.urls[code]
 	if !ok {
@@ -114,6 +142,8 @@ func (s *Storage) GetURLByID(ctx context.Context, code string) (models.URL, erro
 	return url, nil
 }
 
+// GetURLByURL retrieves a URL from the storage by its original URL.
+// It returns the URL if found, or an empty URL struct if not.
 func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, error) {
 	for _, u := range s.urls {
 		if u.URL == url {
@@ -124,9 +154,12 @@ func (s *Storage) GetURLByURL(ctx context.Context, url string) (models.URL, erro
 	return models.URL{}, nil
 }
 
+// GetUserURLs retrieves all URLs associated with a specific user by their userID.
+// It returns a slice of URLs associated with the user.
 func (s *Storage) GetUserURLs(ctx context.Context, userID string) ([]models.URL, error) {
 	var urls []models.URL
 
+	// Collect all URLs associated with the user
 	for _, u := range s.urls {
 		if u.UserID == userID {
 			urls = append(urls, u)
@@ -136,7 +169,10 @@ func (s *Storage) GetUserURLs(ctx context.Context, userID string) ([]models.URL,
 	return urls, nil
 }
 
+// DeleteShortURLs deletes a batch of short URLs by their short codes and the userID.
+// It marks the URLs as deleted by setting their IsDeleted flag to true.
 func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID string) error {
+	// Mark the specified URLs as deleted
 	for code, url := range s.urls {
 		if url.UserID == userID && slices.Contains(urls, url.Code) {
 			url.IsDeleted = true

@@ -1,3 +1,4 @@
+// Package batch provides handlers for processing batch URL shortening requests.
 package batch
 
 import (
@@ -15,6 +16,18 @@ import (
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
 
+// New creates a new handler function for processing batch URL shortening requests.
+//
+// It reads a JSON body containing a batch of URL shortening requests, validates the data,
+// creates shortened URLs for each request, and returns the results in JSON format.
+//
+// Parameters:
+// - ctx: The context for managing the request lifecycle.
+// - service: The URL shortening service used to generate the short URLs.
+// - validator: The validator used to validate the batch URL requests.
+//
+// Returns:
+// - A handler function that processes HTTP requests for batch URL shortening.
 func New(
 	ctx context.Context,
 	service *urlservice.Service,

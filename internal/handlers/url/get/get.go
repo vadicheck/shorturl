@@ -1,3 +1,4 @@
+// Package get provides a handler for retrieving a URL by its ID.
 package get
 
 import (
@@ -9,10 +10,22 @@ import (
 	"github.com/vadicheck/shorturl/internal/models"
 )
 
+// URLStorage defines the interface for accessing URL data in the storage system.
 type URLStorage interface {
 	GetURLByID(ctx context.Context, code string) (models.URL, error)
 }
 
+// New creates a new handler function for retrieving a URL by its ID.
+//
+// It extracts the URL ID from the request path, retrieves the corresponding URL from
+// the storage, and returns a redirect response based on the URL's status.
+//
+// Parameters:
+// - ctx: The context for managing the request lifecycle.
+// - storage: The URL storage service used to retrieve the URL by ID.
+//
+// Returns:
+// - An HTTP handler function that processes requests for retrieving a URL by its ID.
 func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		id := req.PathValue("id")
