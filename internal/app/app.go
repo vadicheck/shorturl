@@ -7,7 +7,6 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	_ "net/http/pprof"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -37,11 +36,14 @@ const (
 	idleTimeout  = 15
 )
 
+// App represents the main entity for starting the application.
 type App struct {
-	router        *chi.Mux
-	serverAddress string
+	router        *chi.Mux // Router is the HTTP request router used by the application.
+	serverAddress string   // The address of the server.
 }
 
+// Run starts the HTTP server and listens for incoming requests.
+// It returns the server instance and any error encountered.
 func (a *App) Run() (*http.Server, error) {
 	server := &http.Server{
 		Addr:         config.Config.ServerAddress,
@@ -62,6 +64,8 @@ func (a *App) Run() (*http.Server, error) {
 	return server, nil
 }
 
+// New creates a new instance of the App, sets up the router, and configures the services.
+// It returns the newly created App instance.
 func New(ctx context.Context) *App {
 	config.ParseFlags()
 

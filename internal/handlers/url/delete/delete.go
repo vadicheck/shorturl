@@ -1,3 +1,4 @@
+// Package delete provides a handler for processing URL deletion requests.
 package delete
 
 import (
@@ -14,6 +15,19 @@ import (
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
 
+// New creates a new handler function for processing URL deletion requests.
+//
+// It reads a JSON body containing a list of URLs to be deleted, validates the data,
+// and then asynchronously deletes the URLs. The response is returned immediately
+// with a 202 Accepted status, and the deletion process continues in the background.
+//
+// Parameters:
+// - ctx: The context for managing the request lifecycle.
+// - service: The URL service used to delete the URLs.
+// - validator: The validator used to validate the delete request data.
+//
+// Returns:
+// - A handler function that processes HTTP requests for URL deletion.
 func New(
 	ctx context.Context,
 	service *urlservice.Service,

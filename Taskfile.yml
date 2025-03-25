@@ -24,6 +24,11 @@ tasks:
       - go test -v ./internal/handlers/url/get
       - go test -v ./internal/handlers/url/shorten
 
+  vet:
+    desc: "Run go vet"
+    cmds:
+      - go vet ./...
+
   imports:
     desc: "Run imports"
     cmds:

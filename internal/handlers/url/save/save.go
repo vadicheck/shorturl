@@ -1,3 +1,4 @@
+// Package save provides a handler for saving a new URL and generating a shortened version.
 package save
 
 import (
@@ -8,9 +9,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vadicheck/shorturl/internal/constants"
-
 	"github.com/vadicheck/shorturl/internal/config"
+	"github.com/vadicheck/shorturl/internal/constants"
 	httpError "github.com/vadicheck/shorturl/internal/http/error"
 	"github.com/vadicheck/shorturl/internal/models/shorten"
 	"github.com/vadicheck/shorturl/internal/services/storage"
@@ -18,6 +18,19 @@ import (
 	"github.com/vadicheck/shorturl/pkg/validators/url"
 )
 
+// New creates a new handler function for saving a URL and generating its shortened version.
+//
+// It processes the URL from the request body, validates it, and attempts to create a shortened URL.
+// If the URL is already shortened, it returns a conflict status with the existing shortened URL.
+// If the URL is invalid, it returns a bad request status.
+// On successful creation, it returns the shortened URL with an HTTP status of 201 Created.
+//
+// Parameters:
+// - ctx: The context for managing the request lifecycle.
+// - service: The URL service used to create the shortened URL.
+//
+// Returns:
+// - An HTTP handler function that processes the URL creation request and returns the result.
 func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
