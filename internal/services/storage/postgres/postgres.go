@@ -60,7 +60,11 @@ func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64,
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			slog.Error("prepare sql error", sl.Err(err))
+		}
+	}()
 
 	var id int64
 
@@ -92,7 +96,11 @@ func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64,
 	return id, nil
 }
 
-func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto, userID string) (*[]repository.BatchURL, error) {
+func (s *Storage) SaveBatchURL(
+	ctx context.Context,
+	dto *[]repository.BatchURLDto,
+	userID string,
+) (*[]repository.BatchURL, error) {
 	entities := make([]repository.BatchURL, 0)
 
 	tx, err := s.db.Begin()

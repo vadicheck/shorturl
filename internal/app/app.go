@@ -7,9 +7,11 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/vadicheck/shorturl/internal/config"
 	"github.com/vadicheck/shorturl/internal/handlers/url/batch"
@@ -29,6 +31,12 @@ import (
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
 
+const (
+	readTimeout  = 10
+	writeTimeout = 10
+	idleTimeout  = 15
+)
+
 type App struct {
 	router        *chi.Mux
 	serverAddress string
@@ -38,9 +46,9 @@ func (a *App) Run() (*http.Server, error) {
 	server := &http.Server{
 		Addr:         config.Config.ServerAddress,
 		Handler:      a.router,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		ReadTimeout:  readTimeout * time.Second,
+		WriteTimeout: writeTimeout * time.Second,
+		IdleTimeout:  idleTimeout * time.Second,
 	}
 
 	slog.Info(fmt.Sprintf("Server starting: %s", a.serverAddress))
@@ -90,6 +98,10 @@ func New(ctx context.Context) *App {
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
 	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
 	r.Delete("/api/user/urls", deleteurl.New(ctx, urlService, shortenValidator))
+
+	if config.Config.AppEnv == "dev" {
+		r.Mount("/debug", middleware.Profiler())
+	}
 
 	return &App{
 		router:        r,
