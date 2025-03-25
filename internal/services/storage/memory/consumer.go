@@ -7,7 +7,7 @@ import (
 	"github.com/vadicheck/shorturl/internal/models"
 )
 
-const permission = 0666
+const permission = 0600
 
 type Consumer struct {
 	reader  *io.Reader

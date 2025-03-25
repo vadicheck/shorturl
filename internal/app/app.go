@@ -31,6 +31,12 @@ import (
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
 )
 
+const (
+	readTimeout  = 10
+	writeTimeout = 10
+	idleTimeout  = 15
+)
+
 type App struct {
 	router        *chi.Mux
 	serverAddress string
@@ -40,9 +46,9 @@ func (a *App) Run() (*http.Server, error) {
 	server := &http.Server{
 		Addr:         config.Config.ServerAddress,
 		Handler:      a.router,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		ReadTimeout:  readTimeout * time.Second,
+		WriteTimeout: writeTimeout * time.Second,
+		IdleTimeout:  idleTimeout * time.Second,
 	}
 
 	slog.Info(fmt.Sprintf("Server starting: %s", a.serverAddress))

@@ -17,7 +17,7 @@ type user struct {
 	UserID string `json:"user_id"`
 }
 
-const userUrls = "/api/user/urls"
+//const userUrls = "/api/user/urls"
 
 func New() func(next http.Handler) http.Handler {
 	slog.Info("cookie middleware enabled")

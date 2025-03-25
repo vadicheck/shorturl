@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const defaultJwtHours = 24
+
 var Config struct {
 	ServerAddress        string
 	BaseURL              string
@@ -26,8 +28,8 @@ func ParseFlags() {
 
 	flag.Parse()
 
-	Config.JwtTokenExpire = time.Hour * 24
-	Config.SecureCookieExpire = time.Hour * 24
+	Config.JwtTokenExpire = time.Hour * defaultJwtHours
+	Config.SecureCookieExpire = time.Hour * defaultJwtHours
 
 	if serverAddress := os.Getenv("SERVER_ADDRESS"); serverAddress != "" {
 		Config.ServerAddress = serverAddress

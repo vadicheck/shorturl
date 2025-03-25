@@ -3,6 +3,7 @@ package save
 import (
 	"bytes"
 	"context"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -20,7 +21,11 @@ func BenchmarkNew(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
-	defer tempFile.Close()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			log.Printf("failed to close temp file: %v", err)
+		}
+	}()
 
 	storage, err := memory.New(tempFile.Name())
 	if err != nil {

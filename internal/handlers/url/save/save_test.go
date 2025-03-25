@@ -3,7 +3,9 @@ package save
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -110,7 +112,11 @@ func TestNew(t *testing.T) {
 			if err != nil {
 				require.NoError(t, err)
 			}
-			defer tempFile.Close()
+			defer func() {
+				if err := tempFile.Close(); err != nil {
+					slog.Error(fmt.Sprintf("failed to close temp file: %v", err))
+				}
+			}()
 
 			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
@@ -128,7 +134,12 @@ func TestNew(t *testing.T) {
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
 
-			defer result.Body.Close()
+			defer func() {
+				if err := result.Body.Close(); err != nil {
+					slog.Error(fmt.Sprintf("failed to close body: %v", err))
+				}
+			}()
+
 			resBody, err := io.ReadAll(result.Body)
 			require.NoError(t, err)
 

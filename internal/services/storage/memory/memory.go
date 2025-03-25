@@ -83,7 +83,11 @@ func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64,
 	return id, nil
 }
 
-func (s *Storage) SaveBatchURL(ctx context.Context, dto *[]repository.BatchURLDto, userID string) (*[]repository.BatchURL, error) {
+func (s *Storage) SaveBatchURL(
+	ctx context.Context,
+	dto *[]repository.BatchURLDto,
+	userID string,
+) (*[]repository.BatchURL, error) {
 	entities := make([]repository.BatchURL, 0)
 
 	for _, urlDTO := range *dto {

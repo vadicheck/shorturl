@@ -26,7 +26,11 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 			return
 		}
-		defer r.Body.Close()
+		defer func() {
+			if err := r.Body.Close(); err != nil {
+				slog.Error(fmt.Sprintf("failed to close body: %v", err))
+			}
+		}()
 
 		slog.Info(fmt.Sprintf("Received request body: %s", body))
 

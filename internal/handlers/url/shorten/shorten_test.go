@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -107,7 +108,11 @@ func TestNew(t *testing.T) {
 			if err != nil {
 				require.NoError(t, err)
 			}
-			defer tempFile.Close()
+			defer func() {
+				if err := tempFile.Close(); err != nil {
+					slog.Error(fmt.Sprintf("failed to close temp file: %v", err))
+				}
+			}()
 
 			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
@@ -117,7 +122,11 @@ func TestNew(t *testing.T) {
 			New(ctx, urlservice.New(storage))(w, req)
 
 			result := w.Result()
-			defer result.Body.Close()
+			defer func() {
+				if err := result.Body.Close(); err != nil {
+					slog.Error(fmt.Sprintf("failed to close body: %v", err))
+				}
+			}()
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))

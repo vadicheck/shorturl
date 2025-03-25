@@ -1,6 +1,7 @@
 package gzip
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -23,7 +24,11 @@ func New() func(next http.Handler) http.Handler {
 			if supportsGzip && isCompressibleContentType(contentType) {
 				cw := compress.NewCompressWriter(w)
 				ow = cw
-				defer cw.Close()
+				defer func() {
+					if err := cw.Close(); err != nil {
+						slog.Error(fmt.Sprintf("failed to close cw: %v", err))
+					}
+				}()
 			}
 
 			contentEncoding := r.Header.Get("Content-Encoding")
@@ -36,7 +41,11 @@ func New() func(next http.Handler) http.Handler {
 				}
 
 				r.Body = cr
-				defer cr.Close()
+				defer func() {
+					if err := cr.Close(); err != nil {
+						slog.Error(fmt.Sprintf("failed to close cr: %v", err))
+					}
+				}()
 			}
 
 			next.ServeHTTP(ow, r)
