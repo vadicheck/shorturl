@@ -9,6 +9,7 @@ import (
 const defaultJwtHours = 24
 
 var Config struct {
+	AppEnv               string
 	ServerAddress        string
 	BaseURL              string
 	DatabaseDsn          string
@@ -21,6 +22,7 @@ var Config struct {
 }
 
 func ParseFlags() {
+	flag.StringVar(&Config.AppEnv, "e", "prod", "environment")
 	flag.StringVar(&Config.ServerAddress, "a", "localhost:8080", "HTTP server startup address")
 	flag.StringVar(&Config.BaseURL, "b", "http://localhost:8080", "the base address of the resulting shortened URL")
 	flag.StringVar(&Config.DatabaseDsn, "d", "", "database DSN")
@@ -30,6 +32,10 @@ func ParseFlags() {
 
 	Config.JwtTokenExpire = time.Hour * defaultJwtHours
 	Config.SecureCookieExpire = time.Hour * defaultJwtHours
+
+	if appEnv := os.Getenv("APP_ENV"); appEnv != "" {
+		Config.AppEnv = appEnv
+	}
 
 	if serverAddress := os.Getenv("SERVER_ADDRESS"); serverAddress != "" {
 		Config.ServerAddress = serverAddress

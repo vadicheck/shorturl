@@ -99,7 +99,9 @@ func New(ctx context.Context) *App {
 	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
 	r.Delete("/api/user/urls", deleteurl.New(ctx, urlService, shortenValidator))
 
-	r.Mount("/debug", middleware.Profiler())
+	if config.Config.AppEnv == "dev" {
+		r.Mount("/debug", middleware.Profiler())
+	}
 
 	return &App{
 		router:        r,
