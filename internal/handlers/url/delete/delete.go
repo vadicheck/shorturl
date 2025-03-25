@@ -3,6 +3,7 @@ package delete
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -20,6 +21,8 @@ func New(
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request []string
+
+		slog.Info(fmt.Sprintf("userID requested (urls.go): %s", r.Header.Get(string(constants.XUserID))))
 
 		dec := json.NewDecoder(r.Body)
 		if err := dec.Decode(&request); err != nil {

@@ -22,6 +22,7 @@ type URLStorage interface {
 func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Header.Get(string(constants.XUserID))
+		slog.Info(fmt.Sprintf("userID requested (urls.go): %s", userID))
 
 		if userID == "" {
 			slog.Error("userID is empty")
@@ -42,7 +43,8 @@ func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 
 		if len(mURLs) == 0 {
 			slog.Info(fmt.Sprintf("No URLs found for userID: %s", userID))
-			http.Error(w, "No URLs found", http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

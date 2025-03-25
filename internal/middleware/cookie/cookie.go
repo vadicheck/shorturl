@@ -38,10 +38,11 @@ func New() func(next http.Handler) http.Handler {
 				return
 			}
 
-			if userUrls == r.URL.String() && (userCookie == nil || errors.Is(err, http.ErrNoCookie)) {
-				httpError.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
-				return
-			}
+			//if userUrls == r.URL.String() && (userCookie == nil || errors.Is(err, http.ErrNoCookie)) {
+			//	slog.Info("запрос без кук по адресу: " + r.URL.String())
+			//	httpError.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			//	return
+			//}
 
 			if userCookie == nil || errors.Is(err, http.ErrNoCookie) {
 				user := &user{

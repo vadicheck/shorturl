@@ -58,6 +58,8 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 			response.Result = config.Config.BaseURL + "/" + code
 		}
 
+		slog.Info(fmt.Sprintf("Result (save.go): %s", response.Result))
+
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(httpStatus)
 

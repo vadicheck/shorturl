@@ -85,7 +85,7 @@ func TestNew(t *testing.T) {
 			name:   "empty urls",
 			userID: userTwo,
 			want: want{
-				contentType: "text/plain; charset=utf-8",
+				contentType: "application/json",
 				statusCode:  http.StatusNoContent,
 				response:    nil,
 			},
