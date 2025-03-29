@@ -1,3 +1,22 @@
+// Package config provides functions for parsing the application's configuration.
+//
+// The configuration is loaded from command-line flags and environment variables.
+// Default values are set in the code but can be overridden by the user at runtime.
+//
+// The following configuration values can be set through flags or environment variables:
+// - AppEnv: The environment in which the application is running (e.g., "prod", "dev").
+// - ServerAddress: The address on which the HTTP server will listen (e.g., "localhost:8080").
+// - BaseURL: The base address of the resulting shortened URL (e.g., "http://localhost:8080").
+// - DatabaseDsn: The Data Source Name (DSN) for connecting to the database.
+// - FileStoragePath: The path to the file used for storing data in file storage.
+// - JwtSecret: The secret key used to sign JWT tokens.
+// - JwtTokenExpire: The duration for which JWT tokens are valid.
+// - SecureCookieHashKey: The key used for securing cookies in hashing.
+// - SecureCookieBlockKey: The key used for securing cookies in encryption.
+// - SecureCookieExpire: The duration for which cookies are valid.
+//
+// The configuration can be specified via command-line flags or environment variables, with the
+// environment variables taking precedence over flag values.
 package config
 
 import (
@@ -6,7 +25,11 @@ import (
 	"time"
 )
 
+const defaultJwtHours = 24
+
+// Config holds the configuration values for the application.
 var Config struct {
+	AppEnv               string
 	ServerAddress        string
 	BaseURL              string
 	DatabaseDsn          string
@@ -18,7 +41,10 @@ var Config struct {
 	SecureCookieExpire   time.Duration
 }
 
+// ParseFlags parses command-line flags and environment variables to populate the configuration values.
+// Default values are set in the code, but they can be overridden by flags or environment variables.
 func ParseFlags() {
+	flag.StringVar(&Config.AppEnv, "e", "prod", "environment")
 	flag.StringVar(&Config.ServerAddress, "a", "localhost:8080", "HTTP server startup address")
 	flag.StringVar(&Config.BaseURL, "b", "http://localhost:8080", "the base address of the resulting shortened URL")
 	flag.StringVar(&Config.DatabaseDsn, "d", "", "database DSN")
@@ -26,8 +52,12 @@ func ParseFlags() {
 
 	flag.Parse()
 
-	Config.JwtTokenExpire = time.Hour * 24
-	Config.SecureCookieExpire = time.Hour * 24
+	Config.JwtTokenExpire = time.Hour * defaultJwtHours
+	Config.SecureCookieExpire = time.Hour * defaultJwtHours
+
+	if appEnv := os.Getenv("APP_ENV"); appEnv != "" {
+		Config.AppEnv = appEnv
+	}
 
 	if serverAddress := os.Getenv("SERVER_ADDRESS"); serverAddress != "" {
 		Config.ServerAddress = serverAddress

@@ -2,6 +2,7 @@ package get
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -78,6 +79,23 @@ func TestNew(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "url delete",
+			code: "delete",
+			want: want{
+				contentType: "text/plain",
+				statusCode:  http.StatusGone,
+				response:    "",
+			},
+			urls: map[string]models.URL{
+				"delete": {
+					ID:     1,
+					Code:   "code",
+					URL:    "https://practicum.yandex.ru/",
+					UserID: uuid.New().String(),
+				},
+			},
+		},
 	}
 
 	ctx := context.Background()
@@ -91,7 +109,11 @@ func TestNew(t *testing.T) {
 			if err != nil {
 				require.NoError(t, err)
 			}
-			defer tempFile.Close()
+			defer func() {
+				if err := tempFile.Close(); err != nil {
+					log.Printf("failed to close temp file: %v", err)
+				}
+			}()
 
 			storage, err := memory.New(tempFile.Name())
 			require.NoError(t, err)
@@ -99,6 +121,11 @@ func TestNew(t *testing.T) {
 			for code, url := range tt.urls {
 				_, err = storage.SaveURL(ctx, code, url.URL, url.UserID)
 				require.NoError(t, err)
+
+				if tt.code == "delete" {
+					err = storage.DeleteShortURLs(ctx, []string{code}, url.UserID)
+					require.NoError(t, err)
+				}
 			}
 
 			req.SetPathValue("id", tt.code)
@@ -106,7 +133,11 @@ func TestNew(t *testing.T) {
 			New(ctx, storage)(w, req)
 
 			result := w.Result()
-			defer result.Body.Close()
+			defer func() {
+				if err := result.Body.Close(); err != nil {
+					log.Printf("failed to close body: %v", err)
+				}
+			}()
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
