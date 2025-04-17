@@ -1,3 +1,4 @@
+// Package shorten provides a handler for creating a shortened URL from a long URL.
 package shorten
 
 import (
@@ -18,6 +19,19 @@ import (
 	"github.com/vadicheck/shorturl/pkg/validators/url"
 )
 
+// New creates a new handler function for shortening a URL.
+//
+// This function processes the incoming request, validates the URL, and attempts to create a shortened URL.
+// If the URL is invalid, it returns a bad request status with an error message.
+// If the URL already exists, it returns a conflict status with the existing shortened URL.
+// On success, it returns the newly created shortened URL with an HTTP status of 201 Created.
+//
+// Parameters:
+// - ctx: The context for managing the request lifecycle.
+// - service: The URL service used to create the shortened URL.
+//
+// Returns:
+// - An HTTP handler function that processes the URL shortening request and returns the result.
 func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request shorten.CreateURLRequest
