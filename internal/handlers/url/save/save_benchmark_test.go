@@ -22,8 +22,8 @@ func BenchmarkNew(b *testing.B) {
 		panic(err)
 	}
 	defer func() {
-		if err := tempFile.Close(); err != nil {
-			log.Printf("failed to close temp file: %v", err)
+		if errClose := tempFile.Close(); errClose != nil {
+			log.Printf("failed to close temp file: %v", errClose)
 		}
 	}()
 

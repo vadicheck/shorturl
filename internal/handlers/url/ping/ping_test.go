@@ -29,8 +29,8 @@ func TestNew(t *testing.T) {
 		require.NoError(t, err)
 	}
 	defer func() {
-		if err := tempFile.Close(); err != nil {
-			slog.Error(fmt.Sprintf("failed to close temp file: %v", err))
+		if errClose := tempFile.Close(); errClose != nil {
+			slog.Error(fmt.Sprintf("failed to close temp file: %v", errClose))
 		}
 	}()
 

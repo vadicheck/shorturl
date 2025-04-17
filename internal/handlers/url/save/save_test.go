@@ -113,8 +113,8 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err)
 			}
 			defer func() {
-				if err := tempFile.Close(); err != nil {
-					slog.Error(fmt.Sprintf("failed to close temp file: %v", err))
+				if errClose := tempFile.Close(); errClose != nil {
+					slog.Error(fmt.Sprintf("failed to close temp file: %v", errClose))
 				}
 			}()
 
@@ -135,8 +135,8 @@ func TestNew(t *testing.T) {
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
 
 			defer func() {
-				if err := result.Body.Close(); err != nil {
-					slog.Error(fmt.Sprintf("failed to close body: %v", err))
+				if errClose := result.Body.Close(); errClose != nil {
+					slog.Error(fmt.Sprintf("failed to close body: %v", errClose))
 				}
 			}()
 

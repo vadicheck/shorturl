@@ -76,8 +76,8 @@ func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64,
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 	defer func() {
-		if err := stmt.Close(); err != nil {
-			slog.Error("prepare sql error", sl.Err(err))
+		if errStmtClose := stmt.Close(); errStmtClose != nil {
+			slog.Error("prepare sql error", sl.Err(errStmtClose))
 		}
 	}()
 
@@ -88,9 +88,9 @@ func (s *Storage) SaveURL(ctx context.Context, code, url, userID string) (int64,
 
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
 			if pgErr.Code == pgerrcode.UniqueViolation {
-				mURL, err := s.GetURLByURL(ctx, url)
-				if err != nil {
-					return 0, err
+				mURL, errGetURL := s.GetURLByURL(ctx, url)
+				if errGetURL != nil {
+					return 0, errGetURL
 				}
 				if mURL.ID > 0 {
 					return 0, &storage.ExistsURLError{
@@ -127,18 +127,18 @@ func (s *Storage) SaveBatchURL(
 	}
 
 	defer func() {
-		if err := tx.Rollback(); err != nil {
-			slog.Error("transaction rollback error", sl.Err(err))
+		if errRollback := tx.Rollback(); errRollback != nil {
+			slog.Error("transaction rollback error", sl.Err(errRollback))
 		}
 	}()
 
 	for _, urlDTO := range *dto {
-		_, err := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL, userID)
-		if err != nil {
-			if errors.Is(err, storage.ErrURLOrCodeExists) {
-				mURL, err := s.GetURLByURL(ctx, urlDTO.OriginalURL)
-				if err != nil {
-					return nil, fmt.Errorf("failed to retrieve URL: %w", err)
+		_, errSaveURL := s.SaveURL(ctx, urlDTO.ShortCode, urlDTO.OriginalURL, userID)
+		if errSaveURL != nil {
+			if errors.Is(errSaveURL, storage.ErrURLOrCodeExists) {
+				mURL, errGetURL := s.GetURLByURL(ctx, urlDTO.OriginalURL)
+				if errGetURL != nil {
+					return nil, fmt.Errorf("failed to retrieve URL: %w", errGetURL)
 				}
 
 				entities = append(entities, repository.BatchURL{
@@ -147,7 +147,7 @@ func (s *Storage) SaveBatchURL(
 				})
 				continue
 			} else {
-				return nil, fmt.Errorf("failed to save URL: %w", err)
+				return nil, fmt.Errorf("failed to save URL: %w", errSaveURL)
 			}
 		}
 
@@ -230,8 +230,8 @@ func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID str
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	defer func() {
-		if err := stmt.Close(); err != nil {
-			slog.Error("prepare sql error", sl.Err(err))
+		if errStmtClose := stmt.Close(); errStmtClose != nil {
+			slog.Error("prepare sql error", sl.Err(errStmtClose))
 		}
 	}()
 
