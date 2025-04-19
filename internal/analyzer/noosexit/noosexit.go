@@ -52,34 +52,42 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		// Inspect each function in the file
 		ast.Inspect(file, func(n ast.Node) bool {
 			// Check if the function is "main"
-			fn, ok := n.(*ast.FuncDecl)
-			if !ok || fn.Name.Name != "main" {
+			fn, okFuncDecl := n.(*ast.FuncDecl)
+			if !okFuncDecl || fn.Name.Name != "main" {
 				return true
 			}
 
 			// Inspect the body of the main function
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				// Look for function calls
-				call, ok := n.(*ast.CallExpr)
-				if !ok {
+				call, okCallExpr := n.(*ast.CallExpr)
+				if !okCallExpr {
 					return true
 				}
 
 				// Check if the call is to os.Exit
-				if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
-					if ident, ok := sel.X.(*ast.Ident); ok &&
-						ident.Name == "os" &&
-						sel.Sel.Name == "Exit" {
+				sel, okSelectorExpr := call.Fun.(*ast.SelectorExpr)
+				if !okSelectorExpr {
+					return true
+				}
 
-						// Ensure that the package is the "os" package
-						if obj := pass.TypesInfo.Uses[ident]; obj != nil {
-							if pkg, ok := obj.(*types.PkgName); ok && pkg.Imported().Path() == "os" {
-								// Report an error if os.Exit is found
-								pass.Reportf(call.Pos(), "use of os.Exit in main.main is forbidden")
-							}
-						}
+				ident, okIdent := sel.X.(*ast.Ident)
+				if !okIdent {
+					return true
+				}
+
+				if ident.Name != "os" || sel.Sel.Name != "Exit" {
+					return true
+				}
+
+				// Ensure that the package is the "os" package
+				if obj := pass.TypesInfo.Uses[ident]; obj != nil {
+					if pkg, ok := obj.(*types.PkgName); ok && pkg.Imported().Path() == "os" {
+						// Report an error if os.Exit is found
+						pass.Reportf(call.Pos(), "use of os.Exit in main.main is forbidden")
 					}
 				}
+
 				return true
 			})
 			return false

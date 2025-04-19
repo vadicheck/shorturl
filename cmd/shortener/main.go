@@ -25,9 +25,9 @@ import (
 //	 -X 'main.buildCommit=$(git rev-parse --short HEAD)'" \
 //	 -o bin/shortener ./cmd/shortener
 var (
-	buildVersion string
-	buildDate    string
-	buildCommit  string
+	buildVersion = "1.0.0"
+	buildDate    = "2025-04-19"
+	buildCommit  = "Short URL YP"
 )
 
 // main is the entry point of the application.
@@ -83,7 +83,7 @@ func printBuildInfo() {
 		buildCommit = "N/A"
 	}
 
-	fmt.Printf("Build version: %s\n", buildVersion)
-	fmt.Printf("Build date: %s\n", buildDate)
-	fmt.Printf("Build commit: %s\n", buildCommit)
+	slog.Info(fmt.Sprintf("Build version: %s\n", buildVersion))
+	slog.Info(fmt.Sprintf("Build date: %s\n", buildDate))
+	slog.Info(fmt.Sprintf("Build commit: %s\n", buildCommit))
 }
