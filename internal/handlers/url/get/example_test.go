@@ -36,8 +36,8 @@ func ExampleNew() {
 		return
 	}
 	defer func() {
-		if err := os.Remove(tempFile.Name()); err != nil {
-			log.Printf("failed to remove file: %v", err)
+		if errRemove := os.Remove(tempFile.Name()); errRemove != nil {
+			log.Printf("failed to remove file: %v", errRemove)
 		}
 	}()
 

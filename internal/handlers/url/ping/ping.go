@@ -25,12 +25,12 @@ type URLStorage interface {
 // - An HTTP handler function that processes the ping request and returns the appropriate status code.
 func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+		reqCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
 		defer cancel()
 
 		res.Header().Set("Content-Type", "application/json")
 
-		if err := storage.PingContext(ctx); err != nil {
+		if err := storage.PingContext(reqCtx); err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
 		}
 

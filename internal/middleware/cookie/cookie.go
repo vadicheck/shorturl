@@ -64,9 +64,9 @@ func New() func(next http.Handler) http.Handler {
 					UserID: uuid.New().String(),
 				}
 
-				encoded, err := s.Encode("user", user)
-				if err != nil {
-					slog.Error("can't build secure cookie", sl.Err(err))
+				encoded, errCookieEncode := s.Encode("user", user)
+				if errCookieEncode != nil {
+					slog.Error("can't build secure cookie", sl.Err(errCookieEncode))
 					httpError.RespondWithError(w, http.StatusInternalServerError, "Auth error")
 					return
 				}
