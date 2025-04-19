@@ -14,6 +14,9 @@
 // - SecureCookieHashKey: The key used for securing cookies in hashing.
 // - SecureCookieBlockKey: The key used for securing cookies in encryption.
 // - SecureCookieExpire: The duration for which cookies are valid.
+// - EnableHTTPS: Enable HTTPS on server.
+// - TLSCertPath: cert path.
+// - TLSKeyPath: key path.
 //
 // The configuration can be specified via command-line flags or environment variables, with the
 // environment variables taking precedence over flag values.
@@ -21,7 +24,9 @@ package config
 
 import (
 	"flag"
+	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -39,6 +44,9 @@ var Config struct {
 	SecureCookieHashKey  string
 	SecureCookieBlockKey string
 	SecureCookieExpire   time.Duration
+	EnableHTTPS          bool
+	TLSCertPath          string
+	TLSKeyPath           string
 }
 
 // ParseFlags parses command-line flags and environment variables to populate the configuration values.
@@ -49,6 +57,9 @@ func ParseFlags() {
 	flag.StringVar(&Config.BaseURL, "b", "http://localhost:8080", "the base address of the resulting shortened URL")
 	flag.StringVar(&Config.DatabaseDsn, "d", "", "database DSN")
 	flag.StringVar(&Config.FileStoragePath, "f", "./storage/filestorage.txt", "path to file storage")
+	flag.BoolVar(&Config.EnableHTTPS, "s", false, "enable HTTPS")
+	flag.StringVar(&Config.TLSCertPath, "c", "certs/localhost.pem", "path to TLS cert")
+	flag.StringVar(&Config.TLSKeyPath, "k", "certs/localhost-key.pem", "path to TLS key")
 
 	flag.Parse()
 
@@ -73,6 +84,22 @@ func ParseFlags() {
 
 	if fileStoragePath := os.Getenv("FILE_STORAGE_PATH"); fileStoragePath != "" {
 		Config.FileStoragePath = fileStoragePath
+	}
+
+	if enableHTTPS := os.Getenv("ENABLE_HTTPS"); enableHTTPS != "" {
+		parsed, err := strconv.ParseBool(enableHTTPS)
+		if err != nil {
+			log.Fatalf("invalid ENABLE_HTTPS value: %v", err)
+		}
+		Config.EnableHTTPS = parsed
+	}
+
+	if TLSCertPath := os.Getenv("TLS_CERT_PATH"); TLSCertPath != "" {
+		Config.TLSCertPath = TLSCertPath
+	}
+
+	if TLSKeyPath := os.Getenv("TLS_KEY_PATH"); TLSKeyPath != "" {
+		Config.TLSKeyPath = TLSKeyPath
 	}
 
 	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {

@@ -17,6 +17,19 @@ import (
 	"github.com/vadicheck/shorturl/internal/app"
 )
 
+// These variables can be set at build time using -ldflags
+//
+//	go build -ldflags "\
+//	 -X 'main.buildVersion=1.0.3' \
+//	 -X 'main.buildDate=$(date +%Y-%m-%d)' \
+//	 -X 'main.buildCommit=$(git rev-parse --short HEAD)'" \
+//	 -o bin/shortener ./cmd/shortener
+var (
+	buildVersion = "1.0.0"
+	buildDate    = "2025-04-19"
+	buildCommit  = "Short URL YP"
+)
+
 // main is the entry point of the application.
 //
 // Workflow:
@@ -29,6 +42,8 @@ import (
 // If the application starts successfully, it logs `"app is ready"`.
 // When the server shuts down, it logs `"Server Exited Properly"`.
 func main() {
+	printBuildInfo()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -55,4 +70,20 @@ func main() {
 	}
 
 	slog.Info("Server Exited Properly")
+}
+
+func printBuildInfo() {
+	if buildVersion == "" {
+		buildVersion = "N/A"
+	}
+	if buildDate == "" {
+		buildDate = "N/A"
+	}
+	if buildCommit == "" {
+		buildCommit = "N/A"
+	}
+
+	slog.Info(fmt.Sprintf("Build version: %s\n", buildVersion))
+	slog.Info(fmt.Sprintf("Build date: %s\n", buildDate))
+	slog.Info(fmt.Sprintf("Build commit: %s\n", buildCommit))
 }

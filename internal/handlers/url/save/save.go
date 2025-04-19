@@ -40,8 +40,8 @@ func New(ctx context.Context, service *urlservice.Service) http.HandlerFunc {
 			return
 		}
 		defer func() {
-			if err := r.Body.Close(); err != nil {
-				slog.Error(fmt.Sprintf("failed to close body: %v", err))
+			if errBodyClose := r.Body.Close(); errBodyClose != nil {
+				slog.Error(fmt.Sprintf("failed to close body: %v", errBodyClose))
 			}
 		}()
 

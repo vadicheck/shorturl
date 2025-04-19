@@ -56,8 +56,21 @@ func (a *App) Run() (*http.Server, error) {
 	slog.Info(fmt.Sprintf("Server starting: %s", a.serverAddress))
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.Error("error starting server", sl.Err(err))
+		if config.Config.EnableHTTPS {
+			errLS := server.ListenAndServeTLS(
+				config.Config.TLSCertPath,
+				config.Config.TLSKeyPath,
+			)
+
+			if errLS != nil && !errors.Is(errLS, http.ErrServerClosed) {
+				slog.Error("error starting server", sl.Err(errLS))
+			}
+		} else {
+			errLS := server.ListenAndServe()
+
+			if errLS != nil && !errors.Is(errLS, http.ErrServerClosed) {
+				slog.Error("error starting server", sl.Err(errLS))
+			}
 		}
 	}()
 
