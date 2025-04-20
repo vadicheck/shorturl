@@ -15,39 +15,50 @@
 // - SecureCookieBlockKey: The key used for securing cookies in encryption.
 // - SecureCookieExpire: The duration for which cookies are valid.
 // - EnableHTTPS: Enable HTTPS on server.
-// - TLSCertPath: cert path.
-// - TLSKeyPath: key path.
+// - TLSCertPath: Cert path.
+// - TLSKeyPath: Key path.
+// - JSONConfig: Path to JSON config.
 //
 // The configuration can be specified via command-line flags or environment variables, with the
 // environment variables taking precedence over flag values.
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"time"
 )
 
 const defaultJwtHours = 24
 
-// Config holds the configuration values for the application.
-var Config struct {
-	AppEnv               string
-	ServerAddress        string
-	BaseURL              string
-	DatabaseDsn          string
-	FileStoragePath      string
-	JwtSecret            string
+// CfgStruct holds the configuration values for the application.
+type CfgStruct struct {
+	AppEnv               string `json:"app_env"`
+	ServerAddress        string `json:"server_address"`
+	BaseURL              string `json:"base_url"`
+	DatabaseDsn          string `json:"database_dsn"`
+	FileStoragePath      string `json:"file_storage_path"`
+	JwtSecret            string `json:"jwt_secret"`
 	JwtTokenExpire       time.Duration
-	SecureCookieHashKey  string
-	SecureCookieBlockKey string
+	SecureCookieHashKey  string `json:"secure_cookie_hash_key"`
+	SecureCookieBlockKey string `json:"secure_cookie_block_key"`
 	SecureCookieExpire   time.Duration
-	EnableHTTPS          bool
-	TLSCertPath          string
-	TLSKeyPath           string
+	EnableHTTPS          bool   `json:"enable_https"`
+	TLSCertPath          string `json:"tls_cert_path"`
+	TLSKeyPath           string `json:"tls_key_path"`
+	JSONConfig           string
 }
+
+// Config is the global instance of CfgStruct used by the application.
+//
+// It holds all runtime configuration values and is typically initialized
+// during startup via a combination of environment variables, command-line
+// arguments, and JSON configuration files.
+var Config CfgStruct
 
 // ParseFlags parses command-line flags and environment variables to populate the configuration values.
 // Default values are set in the code, but they can be overridden by flags or environment variables.
@@ -58,10 +69,19 @@ func ParseFlags() {
 	flag.StringVar(&Config.DatabaseDsn, "d", "", "database DSN")
 	flag.StringVar(&Config.FileStoragePath, "f", "./storage/filestorage.txt", "path to file storage")
 	flag.BoolVar(&Config.EnableHTTPS, "s", false, "enable HTTPS")
-	flag.StringVar(&Config.TLSCertPath, "c", "certs/localhost.pem", "path to TLS cert")
+	flag.StringVar(&Config.TLSCertPath, "t", "certs/localhost.pem", "path to TLS cert")
 	flag.StringVar(&Config.TLSKeyPath, "k", "certs/localhost-key.pem", "path to TLS key")
+	flag.StringVar(&Config.JSONConfig, "c", "", "path to json config")
 
 	flag.Parse()
+
+	if envJSONConfig := os.Getenv("CONFIG"); envJSONConfig != "" {
+		Config.JSONConfig = envJSONConfig
+	}
+
+	if Config.JSONConfig != "" {
+		parseJSONConfig()
+	}
 
 	Config.JwtTokenExpire = time.Hour * defaultJwtHours
 	Config.SecureCookieExpire = time.Hour * defaultJwtHours
@@ -118,5 +138,60 @@ func ParseFlags() {
 		Config.SecureCookieBlockKey = secureCookieBlockKey
 	} else {
 		Config.SecureCookieBlockKey = "alotsecretalotsecretalotsecretgr"
+	}
+}
+
+// parseJSONConfig reads a JSON configuration file from the path specified
+// in Config.JSONConfig, parses it into a CfgStruct, and updates the global
+// Config variable by copying all fields that are not set (zero values) in Config
+// from the parsed config file.
+func parseJSONConfig() {
+	cfgJSON := &CfgStruct{}
+
+	file, err := os.ReadFile(Config.JSONConfig)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = json.Unmarshal(file, &cfgJSON)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	copyMissingFields(&Config, *cfgJSON)
+}
+
+// copyMissingFields copies all non-zero fields from the 'from' CfgStruct
+// into the 'to' CfgStruct pointer, but only for fields that are currently
+// zero-valued in 'to'.
+//
+// Fields are compared and copied using reflection.
+func copyMissingFields(to *CfgStruct, from CfgStruct) {
+	toVal := reflect.ValueOf(to).Elem()
+	fromVal := reflect.ValueOf(from)
+
+	for i := 0; i < toVal.NumField(); i++ {
+		toField := toVal.Field(i)
+		fromField := fromVal.Field(i)
+
+		if isZero(toField) && !isZero(fromField) {
+			toField.Set(fromField)
+		}
+	}
+}
+
+// isZero returns true if the given reflect.Value is considered zero (empty).
+//
+// Supported types: string, bool, int, int64. For other types, reflect.IsZero is used.
+func isZero(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.String:
+		return v.String() == ""
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int64:
+		return v.Int() == 0
+	default:
+		return v.IsZero()
 	}
 }
