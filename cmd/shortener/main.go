@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/vadicheck/shorturl/internal/app"
 )
@@ -26,7 +27,7 @@ import (
 //	 -o bin/shortener ./cmd/shortener
 var (
 	buildVersion = "1.0.0"
-	buildDate    = "2025-04-19"
+	buildDate    = ""
 	buildCommit  = "Short URL YP"
 )
 
@@ -74,13 +75,13 @@ func main() {
 
 func printBuildInfo() {
 	if buildVersion == "" {
-		buildVersion = "N/A"
+		buildVersion = "1.0.0"
 	}
 	if buildDate == "" {
-		buildDate = "N/A"
+		buildDate = time.Now().Format("2006-01-02")
 	}
 	if buildCommit == "" {
-		buildCommit = "N/A"
+		buildCommit = "Short URL YP"
 	}
 
 	slog.Info(fmt.Sprintf("Build version: %s\n", buildVersion))
