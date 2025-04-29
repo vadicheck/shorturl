@@ -114,8 +114,8 @@ func TestNew(t *testing.T) {
 				require.NoError(t, err)
 			}
 			defer func() {
-				if err := tempFile.Close(); err != nil {
-					log.Printf("failed to close temp file: %v", err)
+				if errClose := tempFile.Close(); errClose != nil {
+					log.Printf("failed to close temp file: %v", errClose)
 				}
 			}()
 
@@ -138,8 +138,8 @@ func TestNew(t *testing.T) {
 
 			result := w.Result()
 			defer func() {
-				if err := result.Body.Close(); err != nil {
-					log.Printf("failed to close body: %v", err)
+				if errClose := result.Body.Close(); errClose != nil {
+					log.Printf("failed to close body: %v", errClose)
 				}
 			}()
 
