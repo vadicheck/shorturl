@@ -1,0 +1,13 @@
+{
+  "app_env": "prod",
+  "server_address": "localhost:8080",
+  "base_url": "http://localhost:8080",
+  "database_dsn": "",
+  "file_storage_path": "./storage/filestorage.txt",
+  "jwt_secret": "secretkey",
+  "secure_cookie_hash_key": "very-secret",
+  "secure_cookie_block_key": "alotsecretalotsecretalotsecretgr",
+  "enable_https": false,
+  "tls_cert_path": "certs/localhost.pem",
+  "tls_key_path": "certs/localhost-key.pem"
+}

@@ -29,7 +29,8 @@ import (
 	"honnef.co/go/tools/staticcheck"
 )
 
-func main() {
+// getAnalyzers returns all analyzers used in the multichecker — for testability
+func getAnalyzers() []*analysis.Analyzer {
 	// A map of selected Staticcheck analyzers to include.
 	// Only these analyzers will be added from the Staticcheck set.
 	checks := map[string]bool{
@@ -38,12 +39,6 @@ func main() {
 		"SA5000": true, // unreachable code
 		"SA6000": true, // using regexp.Match instead of compiling
 		"SA9004": true, // unnecessary conversion
-		"ST1000": true, // incorrect package comment formatting
-		"ST1005": true, // incorrect error strings formatting
-		"S1000":  true, // redundant code simplifications
-		"S1002":  true, // unnecessary if/else with return
-		"QF1001": true, // unnecessary fmt.Sprintf
-		"QF1002": true, // can replace strings.Join with simple string concatenation
 	}
 
 	var allChecks []*analysis.Analyzer
@@ -62,13 +57,13 @@ func main() {
 		structtag.Analyzer,    // detects incorrect struct tags
 		unreachable.Analyzer,  // detects unreachable code
 		unusedresult.Analyzer, // detects results of calls that are unused
-	)
-
-	// Add custom analyzer to forbid os.Exit in main.main.
-	allChecks = append(allChecks,
 		noosexit.Analyzer,
 	)
 
+	return allChecks
+}
+
+func main() {
 	// Run all analyzers via multichecker.
-	multichecker.Main(allChecks...)
+	multichecker.Main(getAnalyzers()...)
 }

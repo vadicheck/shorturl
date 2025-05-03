@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -34,7 +33,7 @@ var (
 // main is the entry point of the application.
 //
 // Workflow:
-//  1. Create a context with cancellation (`context.WithCancel`).
+//  1. Create a context signal.NotifyContext.
 //  2. Initialize the HTTP application using `app.New(ctx)`.
 //  3. Start the server with `httpApp.Run()` and handle potential errors.
 //  4. Wait for system signals (`os.Interrupt`, `syscall.SIGTERM`).
@@ -45,32 +44,29 @@ var (
 func main() {
 	printBuildInfo()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	defer stop()
 
 	httpApp := app.New(ctx)
 
 	httpServer, err := httpApp.Run()
 	if err != nil {
-		log.Panic(fmt.Errorf("http server can't start %w", err))
+		log.Panic(fmt.Errorf("http server can't start: %w", err))
 	}
-
-	exit := make(chan os.Signal, 1)
-	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 
 	slog.Info("app is ready")
-	select {
-	case v := <-exit:
-		slog.Info(fmt.Sprintf("signal.Notify: %v\n\n", v))
-	case done := <-ctx.Done():
-		slog.Info(fmt.Sprintf("ctx.Done: %v", done))
-	}
 
-	if err := httpServer.Shutdown(ctx); err != nil {
-		slog.Info(err.Error())
-	}
+	<-ctx.Done()
+	slog.Info("shutdown signal received")
 
-	slog.Info("Server Exited Properly")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		slog.Error("server shutdown error", "error", err)
+	} else {
+		slog.Info("server exited properly")
+	}
 }
 
 func printBuildInfo() {
@@ -84,7 +80,7 @@ func printBuildInfo() {
 		buildCommit = "Short URL YP"
 	}
 
-	slog.Info(fmt.Sprintf("Build version: %s\n", buildVersion))
-	slog.Info(fmt.Sprintf("Build date: %s\n", buildDate))
-	slog.Info(fmt.Sprintf("Build commit: %s\n", buildCommit))
+	slog.Info(fmt.Sprintf("Build version: %s", buildVersion))
+	slog.Info(fmt.Sprintf("Build date: %s", buildDate))
+	slog.Info(fmt.Sprintf("Build commit: %s", buildCommit))
 }

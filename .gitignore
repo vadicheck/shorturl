@@ -28,3 +28,4 @@ golangci-lint
 
 .env
 education/*
+config.json
