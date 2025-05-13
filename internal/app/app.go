@@ -19,6 +19,7 @@ import (
 	"github.com/vadicheck/shorturl/internal/handlers/url/ping"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
 	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
+	"github.com/vadicheck/shorturl/internal/handlers/url/stats"
 	"github.com/vadicheck/shorturl/internal/handlers/url/urls"
 	mwcookie "github.com/vadicheck/shorturl/internal/middleware/cookie"
 	"github.com/vadicheck/shorturl/internal/middleware/gzip"
@@ -111,6 +112,7 @@ func New(ctx context.Context) *App {
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Get("/ping", ping.New(ctx, storage))
 	r.Get("/api/user/urls", urls.New(ctx, storage))
+	r.Get("/api/internal/stats", stats.New(ctx, storage, config.Config.TrustedSubnet))
 	r.Post("/", saveurl.New(ctx, urlService))
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
 	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))

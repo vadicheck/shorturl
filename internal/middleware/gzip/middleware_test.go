@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,7 +48,11 @@ func TestGzipMiddleware_NoCompression(t *testing.T) {
 
 	handler.ServeHTTP(rec, req)
 	res := rec.Result()
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			log.Printf("failed to close body: %v", err)
+		}
+	}()
 
 	if ce := res.Header.Get("Content-Encoding"); ce != "" {
 		t.Fatalf("expected no Content-Encoding, got %s", ce)
