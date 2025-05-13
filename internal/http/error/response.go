@@ -17,7 +17,7 @@ import (
 //
 // Parameters:
 // - w: The `http.ResponseWriter` used to send the HTTP response.
-// - statusCode: The HTTP status code to set for the response (e.g., 400 for bad request, 500 for internal server error).
+// - statusCode: The HTTP status code to set for the response.
 // - message: The error message to be included in the response body as part of the error structure.
 //
 // Example usage:

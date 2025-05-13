@@ -243,6 +243,50 @@ func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID str
 	return nil
 }
 
+// GetCountURLs retrieves the total number of stored URLs from the database.
+// It returns the count or an error if the query fails.
+func (s *Storage) GetCountURLs(ctx context.Context) (int, error) {
+	const op = "storage.postgres.GetCountURLs"
+	const selectCount = "SELECT count(*) FROM public.urls"
+
+	row := s.db.QueryRowContext(ctx, selectCount)
+
+	var countURLs int
+
+	errScan := row.Scan(&countURLs)
+	if errScan != nil {
+		if errors.Is(errScan, sql.ErrNoRows) {
+			return 0, nil
+		}
+
+		return 0, fmt.Errorf("%s: %v", op, errScan)
+	}
+
+	return countURLs, nil
+}
+
+// GetCountUsers retrieves the number of unique users who have stored URLs in the database.
+// It returns the count or an error if the query fails.
+func (s *Storage) GetCountUsers(ctx context.Context) (int, error) {
+	const op = "storage.postgres.GetCountUsers"
+	const selectCount = "SELECT count(DISTINCT user_id) FROM public.urls"
+
+	row := s.db.QueryRowContext(ctx, selectCount)
+
+	var countURLs int
+
+	errScan := row.Scan(&countURLs)
+	if errScan != nil {
+		if errors.Is(errScan, sql.ErrNoRows) {
+			return 0, nil
+		}
+
+		return 0, fmt.Errorf("%s: %v", op, errScan)
+	}
+
+	return countURLs, nil
+}
+
 // scan is a helper function that scans a row from the database and maps it to a models.URL.
 // It returns the scanned URL or an error if the scan operation fails.
 func (s *Storage) scan(row *sql.Row, op string) (models.URL, error) {
