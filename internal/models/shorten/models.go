@@ -46,6 +46,16 @@ type UserURLResponse struct {
 	OriginalURL string `json:"original_url"`
 }
 
+// StatsResponse represents the response body for internal statistics.
+// It contains the total number of stored URLs and the number of unique users.
+type StatsResponse struct {
+	// URLs is the total number of stored URLs.
+	URLs int `json:"urls"`
+
+	// Users is the number of unique users who have stored URLs.
+	Users int `json:"users"`
+}
+
 // ResponseError represents an error response with a message.
 type ResponseError struct {
 	// Error is the error message.

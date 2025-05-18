@@ -44,8 +44,6 @@ func New(ctx context.Context, storage URLStorage) http.HandlerFunc {
 			return
 		}
 
-		slog.Info(fmt.Sprintf("userID requested: %s", userID))
-
 		mURLs, err := storage.GetUserURLs(ctx, userID)
 		if err != nil {
 			slog.Error(

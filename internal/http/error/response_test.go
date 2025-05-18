@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/vadicheck/shorturl/internal/models/shorten"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -33,7 +34,11 @@ func TestRespondWithError(t *testing.T) {
 
 			RespondWithError(w, tt.statusCode, tt.message)
 			result := w.Result()
-			defer result.Body.Close()
+			defer func() {
+				if err := result.Body.Close(); err != nil {
+					log.Printf("failed to close body: %v", err)
+				}
+			}()
 
 			assert.Equal(t, tt.statusCode, result.StatusCode)
 			assert.Equal(t, "application/json", result.Header.Get("Content-Type"))

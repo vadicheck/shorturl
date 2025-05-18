@@ -181,3 +181,21 @@ func (s *Storage) DeleteShortURLs(ctx context.Context, urls []string, userID str
 	}
 	return nil
 }
+
+// GetCountURLs returns the total number of URLs stored in memory.
+// It returns the count as an integer.
+func (s *Storage) GetCountURLs(ctx context.Context) (int, error) {
+	return len(s.urls), nil
+}
+
+// GetCountUsers returns the number of unique users who have stored URLs.
+// It returns the count of distinct user IDs.
+func (s *Storage) GetCountUsers(ctx context.Context) (int, error) {
+	uniqueUserIDs := make(map[string]struct{})
+
+	for _, url := range s.urls {
+		uniqueUserIDs[url.UserID] = struct{}{}
+	}
+
+	return len(uniqueUserIDs), nil
+}

@@ -1,0 +1,23 @@
+edition = "2023";
+
+package internal.proto.v1;
+
+option go_package = "github.com/vadicheck/shorturl/internal/proto/v1";
+
+import "internal/proto/v1/rpc/shorten.proto";
+import "internal/proto/v1/rpc/batch.proto";
+import "internal/proto/v1/rpc/delete.proto";
+import "internal/proto/v1/rpc/get_url.proto";
+import "internal/proto/v1/rpc/get_urls.proto";
+import "internal/proto/v1/rpc/ping.proto";
+import "internal/proto/v1/rpc/internal_stats.proto";
+
+service ShortURL {
+  rpc Shorten(internal.proto.v1.rpc.ShortenRequest) returns (internal.proto.v1.rpc.ShortenResponse);
+  rpc Batch(internal.proto.v1.rpc.BatchRequest) returns (internal.proto.v1.rpc.BatchResponse);
+  rpc Delete(internal.proto.v1.rpc.DeleteRequest) returns (internal.proto.v1.rpc.DeleteResponse);
+  rpc GetURL(internal.proto.v1.rpc.GetUrlRequest) returns (internal.proto.v1.rpc.GetUrlResponse);
+  rpc GetURLs(internal.proto.v1.rpc.GetUrlsRequest) returns (internal.proto.v1.rpc.GetUrlsResponse);
+  rpc Ping(internal.proto.v1.rpc.PingRequest) returns (internal.proto.v1.rpc.PingResponse);
+  rpc InternalStats(internal.proto.v1.rpc.StatRequest) returns (internal.proto.v1.rpc.StatResponse);
+}

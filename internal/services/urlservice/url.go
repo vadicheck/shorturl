@@ -45,6 +45,10 @@ type URLStorage interface {
 
 	// DeleteShortURLs deletes multiple short URLs associated with the given user ID.
 	DeleteShortURLs(ctx context.Context, urls []string, userID string) error
+
+	GetCountURLs(ctx context.Context) (int, error)
+
+	GetCountUsers(ctx context.Context) (int, error)
 }
 
 const defaultCodeLength = 10

@@ -18,6 +18,7 @@
 // - TLSCertPath: Cert path.
 // - TLSKeyPath: Key path.
 // - JSONConfig: Path to JSON config.
+// - TrustedSubnet: Allowed subnet for statistics.
 //
 // The configuration can be specified via command-line flags or environment variables, with the
 // environment variables taking precedence over flag values.
@@ -39,6 +40,7 @@ const defaultJwtHours = 24
 type CfgStruct struct {
 	AppEnv               string `json:"app_env"`
 	ServerAddress        string `json:"server_address"`
+	GRPCAddress          string `json:":3200"`
 	BaseURL              string `json:"base_url"`
 	DatabaseDsn          string `json:"database_dsn"`
 	FileStoragePath      string `json:"file_storage_path"`
@@ -50,6 +52,7 @@ type CfgStruct struct {
 	EnableHTTPS          bool   `json:"enable_https"`
 	TLSCertPath          string `json:"tls_cert_path"`
 	TLSKeyPath           string `json:"tls_key_path"`
+	TrustedSubnet        string `json:"trusted_subnet"`
 	JSONConfig           string
 }
 
@@ -65,13 +68,15 @@ var Config CfgStruct
 func ParseFlags() {
 	flag.StringVar(&Config.AppEnv, "e", "prod", "environment")
 	flag.StringVar(&Config.ServerAddress, "a", "localhost:8080", "HTTP server startup address")
+	flag.StringVar(&Config.GRPCAddress, "g", ":3200", "gRPC server startup address")
 	flag.StringVar(&Config.BaseURL, "b", "http://localhost:8080", "the base address of the resulting shortened URL")
 	flag.StringVar(&Config.DatabaseDsn, "d", "", "database DSN")
 	flag.StringVar(&Config.FileStoragePath, "f", "./storage/filestorage.txt", "path to file storage")
 	flag.BoolVar(&Config.EnableHTTPS, "s", false, "enable HTTPS")
-	flag.StringVar(&Config.TLSCertPath, "t", "certs/localhost.pem", "path to TLS cert")
+	flag.StringVar(&Config.TLSCertPath, "p", "certs/localhost.pem", "path to TLS cert")
 	flag.StringVar(&Config.TLSKeyPath, "k", "certs/localhost-key.pem", "path to TLS key")
 	flag.StringVar(&Config.JSONConfig, "c", "", "path to json config")
+	flag.StringVar(&Config.TrustedSubnet, "t", "", "trusted subnet")
 
 	flag.Parse()
 
@@ -92,6 +97,10 @@ func ParseFlags() {
 
 	if serverAddress := os.Getenv("SERVER_ADDRESS"); serverAddress != "" {
 		Config.ServerAddress = serverAddress
+	}
+
+	if GRPCAddress := os.Getenv("GRPC_ADDRESS"); GRPCAddress != "" {
+		Config.GRPCAddress = GRPCAddress
 	}
 
 	if baseURL := os.Getenv("BASE_URL"); baseURL != "" {
@@ -120,6 +129,10 @@ func ParseFlags() {
 
 	if TLSKeyPath := os.Getenv("TLS_KEY_PATH"); TLSKeyPath != "" {
 		Config.TLSKeyPath = TLSKeyPath
+	}
+
+	if TrustedSubnet := os.Getenv("TRUSTED_SUBNET"); TrustedSubnet != "" {
+		Config.TrustedSubnet = TrustedSubnet
 	}
 
 	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {

@@ -25,7 +25,7 @@ type ExistsURLError struct {
 }
 
 // Error implements the error interface for ExistsURLError.
-// It returns a string representation of the error that includes the original URL, the short code, and the underlying error.
+// It returns a string representation of the error that includes the original URL, the short code, and error.
 func (e *ExistsURLError) Error() string {
 	return fmt.Sprintf("[%s:%s] %v", e.OriginalURL, e.ShortCode, e.Err)
 }

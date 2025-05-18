@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -19,12 +18,11 @@ import (
 	"github.com/vadicheck/shorturl/internal/handlers/url/ping"
 	saveurl "github.com/vadicheck/shorturl/internal/handlers/url/save"
 	"github.com/vadicheck/shorturl/internal/handlers/url/shorten"
+	"github.com/vadicheck/shorturl/internal/handlers/url/stats"
 	"github.com/vadicheck/shorturl/internal/handlers/url/urls"
 	mwcookie "github.com/vadicheck/shorturl/internal/middleware/cookie"
 	"github.com/vadicheck/shorturl/internal/middleware/gzip"
 	middlewarelogger "github.com/vadicheck/shorturl/internal/middleware/logger"
-	"github.com/vadicheck/shorturl/internal/services/storage/memory"
-	"github.com/vadicheck/shorturl/internal/services/storage/postgres"
 	"github.com/vadicheck/shorturl/internal/services/urlservice"
 	"github.com/vadicheck/shorturl/internal/validator"
 	"github.com/vadicheck/shorturl/pkg/logger/sl"
@@ -79,29 +77,12 @@ func (a *App) Run() (*http.Server, error) {
 
 // New creates a new instance of the App, sets up the router, and configures the services.
 // It returns the newly created App instance.
-func New(ctx context.Context) *App {
-	config.ParseFlags()
-
-	var err error
-	var storage urlservice.URLStorage
-
-	if config.Config.DatabaseDsn != "" {
-		storage, err = postgres.New(config.Config.DatabaseDsn)
-		if err != nil {
-			log.Panic(err)
-		}
-		slog.Info("Storage: postgres")
-	} else {
-		storage, err = memory.New(config.Config.FileStoragePath)
-		if err != nil {
-			log.Panic(err)
-		}
-		slog.Info("Storage: memory")
-	}
-
-	urlService := urlservice.New(storage)
-	shortenValidator := validator.New()
-
+func New(
+	ctx context.Context,
+	storage urlservice.URLStorage,
+	validator *validator.Validator,
+	urlService *urlservice.Service,
+) *App {
 	r := chi.NewRouter()
 
 	r.Use(gzip.New())
@@ -111,10 +92,11 @@ func New(ctx context.Context) *App {
 	r.Get("/{id}", geturl.New(ctx, storage))
 	r.Get("/ping", ping.New(ctx, storage))
 	r.Get("/api/user/urls", urls.New(ctx, storage))
+	r.Get("/api/internal/stats", stats.New(ctx, storage, config.Config.TrustedSubnet))
 	r.Post("/", saveurl.New(ctx, urlService))
 	r.Post("/api/shorten", shorten.New(ctx, urlService))
-	r.Post("/api/shorten/batch", batch.New(ctx, urlService, shortenValidator))
-	r.Delete("/api/user/urls", deleteurl.New(ctx, urlService, shortenValidator))
+	r.Post("/api/shorten/batch", batch.New(ctx, urlService, validator))
+	r.Delete("/api/user/urls", deleteurl.New(ctx, urlService, validator))
 
 	if config.Config.AppEnv == "dev" {
 		r.Mount("/debug", middleware.Profiler())

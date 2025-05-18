@@ -1,0 +1,14 @@
+edition = "2023";
+
+package internal.proto.v1.rpc;
+
+option go_package = "github.com/vadicheck/shorturl/internal/proto/v1/rpc";
+
+import "internal/proto/v1/models/urls.proto";
+
+message GetUrlsRequest {
+}
+
+message GetUrlsResponse {
+  repeated internal.proto.v1.models.ShortUrl urls = 1;
+}
