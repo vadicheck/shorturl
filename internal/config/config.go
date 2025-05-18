@@ -40,6 +40,7 @@ const defaultJwtHours = 24
 type CfgStruct struct {
 	AppEnv               string `json:"app_env"`
 	ServerAddress        string `json:"server_address"`
+	GRPCAddress          string `json:":3200"`
 	BaseURL              string `json:"base_url"`
 	DatabaseDsn          string `json:"database_dsn"`
 	FileStoragePath      string `json:"file_storage_path"`
@@ -67,6 +68,7 @@ var Config CfgStruct
 func ParseFlags() {
 	flag.StringVar(&Config.AppEnv, "e", "prod", "environment")
 	flag.StringVar(&Config.ServerAddress, "a", "localhost:8080", "HTTP server startup address")
+	flag.StringVar(&Config.GRPCAddress, "g", ":3200", "gRPC server startup address")
 	flag.StringVar(&Config.BaseURL, "b", "http://localhost:8080", "the base address of the resulting shortened URL")
 	flag.StringVar(&Config.DatabaseDsn, "d", "", "database DSN")
 	flag.StringVar(&Config.FileStoragePath, "f", "./storage/filestorage.txt", "path to file storage")
@@ -95,6 +97,10 @@ func ParseFlags() {
 
 	if serverAddress := os.Getenv("SERVER_ADDRESS"); serverAddress != "" {
 		Config.ServerAddress = serverAddress
+	}
+
+	if GRPCAddress := os.Getenv("GRPC_ADDRESS"); GRPCAddress != "" {
+		Config.GRPCAddress = GRPCAddress
 	}
 
 	if baseURL := os.Getenv("BASE_URL"); baseURL != "" {

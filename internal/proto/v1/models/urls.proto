@@ -1,0 +1,14 @@
+edition = "2023";
+
+option go_package = "github.com/vadicheck/shorturl/internal/proto/v1/models";
+
+package internal.proto.v1.models;
+
+// ShortUrl
+message ShortUrl {
+  // Code is the shortened code associated with the URL.
+  string short_url = 1;
+
+  // URL is the original URL that has been shortened.
+  string original_url = 2;
+}

@@ -1,0 +1,25 @@
+edition = "2023";
+
+option go_package = "github.com/vadicheck/shorturl/internal/proto/v1/models";
+
+package internal.proto.v1.models;
+
+// URL represents a shortened URL entry in the database.
+// It contains information about the original URL, its shortened code, and the associated user ID.
+message Url {
+  // ID is the unique identifier for the URL entry in the database.
+  int64 id = 1;
+
+  // Code is the shortened code associated with the URL.
+  string code = 2;
+
+  // URL is the original URL that has been shortened.
+  string url = 3;
+
+  // UserID is the ID of the user who created the shortened URL.
+  string user_id = 4;
+
+  // IsDeleted indicates whether the URL has been deleted.
+  // If true, the URL has been marked as deleted.
+  string is_deleted = 5;
+}

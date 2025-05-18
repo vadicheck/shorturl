@@ -1,0 +1,11 @@
+edition = "2023";
+
+package internal.proto.v1.rpc;
+
+option go_package = "github.com/vadicheck/shorturl/internal/proto/v1/rpc";
+
+message PingRequest {
+}
+
+message PingResponse {
+}

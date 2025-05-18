@@ -1,0 +1,15 @@
+edition = "2023";
+
+package internal.proto.v1.rpc;
+
+option go_package = "github.com/vadicheck/shorturl/internal/proto/v1/rpc";
+
+import "internal/proto/v1/models/batch_url.proto";
+
+message BatchRequest {
+  repeated internal.proto.v1.models.BatchFullUrl urls = 1;
+}
+
+message BatchResponse {
+  repeated internal.proto.v1.models.BatchShortUrl result = 1;
+}
